@@ -3,11 +3,1535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Ledger — AI Accountant</title>
+    <meta name="description" content="CK Personal Finance local internal cockpit">
+    <title>CK Personal Finance</title>
+    <link rel="icon" href="static/assets/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0d0f0d;
+            --rail: #111410;
+            --surface: #171a15;
+            --surface-2: #20241d;
+            --surface-3: #10130f;
+            --line: #3a3429;
+            --line-soft: #29271f;
+            --text: #f0eee7;
+            --muted: #b9b1a0;
+            --dim: #817968;
+            --accent: #c9a96e;
+            --accent-2: #8ea78f;
+            --risk: #dc8f86;
+            --ok: #98d8ab;
+            --radius: 8px;
+            --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            --sans: "Segoe UI", "Aptos", system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
+        body {
+            margin: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgb(201 169 110 / 0.07), transparent 34rem),
+                linear-gradient(180deg, #10120f, var(--bg));
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 15px;
+            overflow: hidden;
+        }
+        button, input, textarea { font: inherit; }
+        button {
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
+            cursor: pointer;
+            transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+        }
+        button:hover, button:focus-visible { border-color: var(--accent); background: #24231c; outline: 2px solid transparent; }
+        button:active { transform: translateY(1px); }
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { margin: 0 0 2px; font-size: 24px; line-height: 1.05; }
+        h2 { font-size: 20px; margin-bottom: 8px; text-wrap: balance; }
+        h3 { font-size: 14px; margin-bottom: 7px; }
+        code { font-family: var(--mono); color: var(--accent-2); white-space: normal; }
+        .skip-link {
+            position: absolute;
+            left: 12px;
+            top: -44px;
+            padding: 8px 10px;
+            background: var(--accent);
+            color: #07110d;
+            z-index: 20;
+        }
+        .skip-link:focus { top: 10px; }
+        .meta {
+            color: var(--dim);
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0;
+        }
+        .muted { color: var(--muted); }
+        .app-shell {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            height: 100dvh;
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+        .topbar {
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.15fr) minmax(250px, 0.85fr);
+            gap: 18px;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+            background: rgb(17 20 16 / 0.96);
+        }
+        .brand-strip, .identity, .rhythm, .seal-wrap {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+        .brand-strip { gap: 16px; }
+        .amtl-logo {
+            width: 168px;
+            height: auto;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+        .identity { gap: 11px; }
+        .product-mark {
+            width: 58px;
+            height: 58px;
+            border-radius: 15px;
+            flex: 0 0 auto;
+        }
+        .rhythm {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .prompt {
+            max-width: 62ch;
+            margin: 0;
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.38;
+        }
+        .prompt-source {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .time-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .seal-wrap {
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .seal {
+            width: 106px;
+            height: 106px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 266px minmax(0, 1fr) 334px;
+            min-height: 0;
+        }
+        .left-nav, .inspector {
+            background: rgb(17 20 16 / 0.86);
+            padding: 16px;
+            min-width: 0;
+        }
+        .left-nav {
+            border-right: 1px solid var(--line);
+            overflow: auto;
+        }
+        .inspector {
+            border-left: 1px solid var(--line);
+            overflow: auto;
+            display: grid;
+            align-content: start;
+            gap: 12px;
+        }
+        main {
+            min-width: 0;
+            padding: 18px 20px 18px;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto auto auto auto minmax(0, 1fr);
+        }
+        details {
+            border-bottom: 1px solid var(--line-soft);
+            padding: 10px 0;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 750;
+            color: var(--text);
+        }
+        .nav-items { display: grid; gap: 5px; margin-top: 9px; }
+        .nav-button {
+            width: 100%;
+            padding: 9px 8px;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            color: var(--muted);
+        }
+        .nav-button.active, .nav-button:hover, .nav-button:focus-visible {
+            background: #24231c;
+            color: var(--text);
+        }
+        .screen-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        .screen-head h2 { margin-bottom: 4px; font-size: 28px; }
+        .segments, .subtabs, .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .segments { margin-bottom: 10px; }
+        .subtabs { margin-bottom: 12px; }
+        .segment, .tab-button, .action, .visual-button {
+            padding: 8px 11px;
+            min-height: 38px;
+        }
+        .segment.active, .tab-button.active {
+            color: #0d0f0d;
+            background: var(--accent);
+            border-color: var(--accent);
+            font-weight: 800;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 27px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #24231c;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .metric {
+            min-height: 82px;
+            text-align: left;
+            padding: 12px;
+        }
+        .metric strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 25px;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric span { color: var(--muted); }
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+            gap: 14px;
+            min-height: 0;
+        }
+        .panel, .row-panel, .inspector-card {
+            background: rgb(23 26 21 / 0.94);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            min-width: 0;
+        }
+        .panel, .inspector-card { padding: 14px; }
+        .panel {
+            display: grid;
+            align-content: start;
+            gap: 10px;
+            max-height: 100%;
+            overflow: hidden;
+        }
+        .row-list {
+            display: grid;
+            gap: 8px;
+            min-height: 0;
+        }
+        .row-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 11px;
+        }
+        .row-panel p { margin-bottom: 0; }
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .mini-card {
+            padding: 10px;
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            background: var(--surface-3);
+            min-height: 86px;
+        }
+        .visual-shelf {
+            display: none;
+            padding: 12px;
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            background: var(--surface-3);
+        }
+        .visual-shelf.open { display: block; }
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .timeline div {
+            min-height: 62px;
+            border-top: 2px solid var(--accent);
+            padding-top: 7px;
+            color: var(--muted);
+        }
+        .bar {
+            height: 10px;
+            margin-top: 8px;
+            background: linear-gradient(90deg, var(--accent) var(--bar, 45%), #263c32 var(--bar, 45%));
+            border-radius: 6px;
+        }
+        .output {
+            padding: 10px;
+            min-height: 54px;
+            background: var(--surface-3);
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            color: var(--muted);
+            overflow-wrap: anywhere;
+        }
+        .hidden { display: none !important; }
+        .helper-grid {
+            display: grid;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .helper-chip {
+            padding: 9px;
+            color: var(--muted);
+            background: #121510;
+            text-align: left;
+        }
+        .helper-chip.active { color: #0d0f0d; background: var(--accent); }
+        .field-help {
+            margin-top: 10px;
+            color: var(--muted);
+            line-height: 1.48;
+        }
+        .inspector-card details {
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            padding: 9px;
+            margin-top: 8px;
+            background: #121510;
+        }
+        .admin-proof {
+            display: grid;
+            gap: 8px;
+            max-height: 360px;
+            overflow: auto;
+        }
+        .proof-row {
+            padding: 10px;
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            background: #121510;
+            overflow-wrap: anywhere;
+        }
+        @media (max-width: 1180px) {
+            body { overflow: auto; }
+            .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
+            .topbar, .layout, .content-grid { grid-template-columns: 1fr; }
+            main { overflow: visible; }
+            .left-nav, .inspector { border: 0; border-bottom: 1px solid var(--line); }
+            .seal-wrap { justify-content: flex-start; }
+            .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .amtl-logo { width: 148px; }
+        }
+        @media (max-width: 660px) {
+            .topbar, main, .left-nav, .inspector { padding: 12px; }
+            .brand-strip { align-items: center; flex-direction: row; gap: 9px; }
+            .identity { width: auto; min-width: 0; gap: 8px; }
+            .amtl-logo { width: 118px; }
+            .product-mark { width: 46px; height: 46px; border-radius: 12px; }
+            h1 { font-size: 18px; }
+            .seal { width: 82px; height: 82px; }
+            .metrics, .mini-grid, .screen-head, .timeline { grid-template-columns: 1fr; }
+            .segment, .tab-button, .action, .visual-button, .metric { width: 100%; }
+        }
+    </style>
 </head>
 <body>
-    <h1>The Ledger</h1>
-    <p>AI Accountant for Almost Magic Tech Lab</p>
-    <p>API documentation available at <a href="/docs">/docs</a></p>
+    <a class="skip-link" href="#main">Skip to money view</a>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand-strip">
+                <img class="amtl-logo" src="static/assets/amtl-logo-transparent.png" alt="Almost Magic Tech Lab">
+                <div class="identity">
+                    <img class="product-mark" src="static/assets/ck-personal-finance-mark.svg" alt="CK Personal Finance logo">
+                    <div>
+                        <h1>CK Personal Finance</h1>
+                        <div class="muted">Private local money cockpit</div>
+                    </div>
+                </div>
+            </div>
+            <div class="rhythm" aria-label="Finance prompt and local rhythm">
+                <div class="prompt-source" id="promptSource">Money note</div>
+                <p class="prompt" id="moneyPrompt">Loading the next useful money prompt...</p>
+                <div class="time-line">
+                    <span id="datePart">-- ---</span>
+                    <span id="dayPart">---</span>
+                    <span id="timePart">--:--</span>
+                    <span id="weatherPart">Weather/status: checking local runtime</span>
+                </div>
+            </div>
+            <div class="seal-wrap">
+                <div>
+                    <div class="meta">AMTL seal</div>
+                    <strong>Clarity over cynicism</strong>
+                    <p class="muted">Proof, reports, and deeper visuals open only when asked.</p>
+                </div>
+                <img class="seal" src="static/assets/amtl-seal.png" alt="AMTL clarity over cynicism seal">
+            </div>
+        </header>
+
+        <div class="layout">
+            <nav class="left-nav" id="leftNav" aria-label="CK Personal Finance sections"></nav>
+
+            <main id="main">
+                <section class="screen-head">
+                    <div>
+                        <div class="meta" id="breadcrumb">Overview</div>
+                        <h2 id="screenTitle">Today</h2>
+                        <p class="muted" id="screenCopy">Loading the local money picture...</p>
+                    </div>
+                    <span class="status-pill" id="modePill">Local only</span>
+                </section>
+
+                <div class="segments" id="topSegments" role="tablist" aria-label="Primary money sections"></div>
+                <div class="subtabs" id="subTabs" role="tablist" aria-label="Current section tabs"></div>
+                <section class="metrics" id="metricGrid" aria-label="Clickable local counts"></section>
+
+                <section class="content-grid">
+                    <div class="panel">
+                        <div>
+                            <div class="meta" id="activeTabLabel">Today</div>
+                            <h2 id="workTitle">Needs attention today</h2>
+                            <p class="muted" id="workIntro">Tabs keep the centre calm; each button opens only the detail the user asked for.</p>
+                        </div>
+                        <div id="workList" class="row-list"></div>
+                        <div class="quick-actions" id="actionBar"></div>
+                        <div class="visual-shelf" id="visualShelf"></div>
+                        <div class="output" id="actionOutput">Choose a local action. Nothing leaves this machine.</div>
+                    </div>
+                    <div class="panel">
+                        <div>
+                            <div class="meta">Exact rows and opened tools</div>
+                            <h2 id="detailTitle">Selected detail</h2>
+                        </div>
+                        <div id="detailRows" class="row-list"></div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="inspector" aria-label="Contextual helper rail">
+                <section class="inspector-card">
+                    <div class="meta">Contextual helper</div>
+                    <h2 id="helperTitle">Today</h2>
+                    <p id="helperSummary" class="muted">Only the selected section is explained here.</p>
+                    <div class="helper-grid" id="helperButtons"></div>
+                    <div class="field-help" id="helperBody"></div>
+                    <div id="helperDetails"></div>
+                </section>
+                <section class="inspector-card">
+                    <div class="meta">Next useful action</div>
+                    <p id="nextAction">Loading...</p>
+                </section>
+                <section class="inspector-card hidden" id="adminProofCard">
+                    <div class="meta">Admin proof</div>
+                    <h2>Runtime truth</h2>
+                    <div class="admin-proof" id="adminProof"></div>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            cockpit: null,
+            actions: null,
+            section: "overview",
+            tab: "today",
+            drilldown: null,
+            helperKey: "why",
+            visual: null,
+            lastAction: "Choose a local action. Nothing leaves this machine."
+        };
+        const API_BASE = location.hostname.toLowerCase() === "amtl" && location.pathname.startsWith("/sak/finance")
+            ? "/sak/finance"
+            : "";
+        const apiUrl = (path) => `${API_BASE}${path}`;
+
+        const financeWisdom = [
+            {
+                source: "Money note",
+                text: "The useful question is not only what did I spend, but what promise did that spend make about future time?"
+            },
+            {
+                source: "Psychology of Money principle",
+                text: "Room for error is not pessimism. It is the quiet space that lets a plan survive ordinary life."
+            },
+            {
+                source: "Small money story",
+                text: "A forgotten monthly subscription is rarely one bad decision; it is usually a missing review ritual. Find it once, then make the ritual lighter."
+            },
+            {
+                source: "Local finance prompt",
+                text: "Open the evidence before the report. The calmer order is source, row, explanation, then action."
+            },
+            {
+                source: "Investment reminder",
+                text: "A forecast should change behaviour gently. If it only creates heat, it is not yet a useful forecast."
+            }
+        ];
+
+        const sections = [
+            {
+                id: "overview",
+                label: "Overview",
+                open: true,
+                question: "What needs attention today?",
+                tabs: [
+                    { id: "today", label: "Today", surface: "budget", title: "Today", copy: "Start with the money items that need care now: next bills, quiet risks, recent changes, and safe local actions." },
+                    { id: "changed", label: "What changed", surface: "local-notes", title: "What changed", copy: "A short change story instead of a long scroll of every proof row." },
+                    { id: "review-later", label: "Review later", surface: "reminders", title: "Review later", copy: "Park useful but non-urgent items so the app does not keep shouting." },
+                    { id: "focus", label: "Focus mode", surface: "budget", title: "Focus mode", copy: "Only today's pulse, one next action, and the evidence link." }
+                ]
+            },
+            {
+                id: "money-flow",
+                label: "Money Flow",
+                open: false,
+                question: "Where is money going?",
+                tabs: [
+                    { id: "transactions", label: "Transactions", surface: "cashflow", title: "Transactions", copy: "Rows, merchants, source freshness, and receipt links without bank-provider writes." },
+                    { id: "bills", label: "Bills", surface: "reminders", title: "Bills", copy: "Upcoming bills, pressure days, reminders, and exact named rows." },
+                    { id: "subscriptions", label: "Subscriptions", surface: "scenarios", title: "Subscriptions", copy: "Find recurring payments, trial endings, price changes, annual cost, and cancellation routes." },
+                    { id: "refunds", label: "Refunds", surface: "reports", title: "Refunds", copy: "Expected refunds, received refunds, and follow-up reminders." },
+                    { id: "fees", label: "Fees and duplicates", surface: "cashflow", title: "Fees and duplicates", copy: "Find bank fees, duplicate charges, price changes, and unusual merchant rows." },
+                    { id: "merchants", label: "Merchants", surface: "accounts", title: "Merchants", copy: "Decode messy merchant labels and remember user names for them." }
+                ]
+            },
+            {
+                id: "planning",
+                label: "Planning",
+                open: false,
+                question: "What happens next?",
+                tabs: [
+                    { id: "forecast", label: "Forecast", surface: "scenarios", title: "Forecast", copy: "Month-end, 30-day, bill pressure, and buffer forecasts with assumptions shown only when opened." },
+                    { id: "run-rate", label: "Monthly run rate", surface: "budget", title: "Monthly run rate", copy: "Daily pace, category pace, and comfort-target drift without shame language." },
+                    { id: "scenarios", label: "Scenario planner", surface: "scenarios", title: "Scenario planner", copy: "Try a choice locally before taking any real-world action." },
+                    { id: "safe-to-spend", label: "Safe-to-spend", surface: "cashflow", title: "Safe-to-spend", copy: "A careful estimate, not an instruction or regulated advice." },
+                    { id: "sinking-funds", label: "Sinking funds", surface: "goals", title: "Sinking funds", copy: "Turn annual costs into monthly set-aside rhythms." },
+                    { id: "goals", label: "Goals", surface: "goals", title: "Goals", copy: "Comfort targets, future dates, and small repeated actions." },
+                    { id: "reminders", label: "Reminders", surface: "reminders", title: "Reminders", copy: "Local reminders for reviews, bills, refunds, trials, and notice periods." }
+                ]
+            },
+            {
+                id: "tools",
+                label: "Tools",
+                open: false,
+                question: "What can help me find or fix things?",
+                tabs: [
+                    { id: "money-tools", label: "Money tools", surface: "budget", title: "Money tools", copy: "Small tools appear as buttons: find, check, match, track, explain, and remember." },
+                    { id: "import", label: "Import", surface: "import-reconcile", title: "Import", copy: "Excel, CSV, PDF, receipt image, statement, and manual-note flows are mapped before anything is trusted." },
+                    { id: "cancellation", label: "Cancellation finder", surface: "scenarios", title: "Cancellation finder", copy: "Find unsubscribe pages, platform-managed subscriptions, support scripts, and follow-up reminders." },
+                    { id: "renewals", label: "Renewal centre", surface: "reminders", title: "Renewal centre", copy: "Annual renewals, notice periods, contracts, warranties, and return windows." },
+                    { id: "disputes", label: "Dispute pack", surface: "reports", title: "Dispute pack", copy: "Build local evidence packs for suspicious or incorrect charges without contacting anyone." },
+                    { id: "money-memory", label: "Money memory", surface: "local-notes", title: "Money memory", copy: "Decision log, review-later queue, do-not-nag state, and important money events." },
+                    { id: "rules", label: "Money rules", surface: "local-notes", title: "Money rules", copy: "User-defined local rules for reminders, hiding, tone, forecast assumptions, and review rhythm." }
+                ]
+            },
+            {
+                id: "evidence",
+                label: "Evidence",
+                open: false,
+                question: "Why does the app think this?",
+                tabs: [
+                    { id: "evidence-search", label: "Search", surface: "tax", title: "Evidence search", copy: "Search approved local documents and indexed NAS evidence with Postgres/pgvector." },
+                    { id: "receipt-matcher", label: "Receipt matcher", surface: "tax", title: "Receipt matcher", copy: "Link receipts, invoices, PDFs, and imported rows to money objects." },
+                    { id: "evidence-gaps", label: "Evidence gaps", surface: "tax", title: "Evidence gaps", copy: "Show what needs one more source, not as blame but as confidence repair." },
+                    { id: "tax-pack", label: "Tax evidence pack", surface: "tax", title: "Tax evidence pack", copy: "Evidence organisation only; not tax advice." },
+                    { id: "nas-sources", label: "NAS sources", surface: "tax", title: "NAS sources", copy: "Index approved NAS roots with only the two user-named exclusions." }
+                ]
+            },
+            {
+                id: "chat",
+                label: "Chat",
+                open: false,
+                question: "Can I just ask?",
+                tabs: [
+                    { id: "ask-money", label: "Ask my money", surface: "budget", title: "Ask my money", copy: "A contextual money co-pilot that answers from local data and offers buttons that open real screens." },
+                    { id: "explain-this", label: "Explain this", surface: "budget", title: "Explain this", copy: "Explain the selected row, amount, date, merchant, report, or action." },
+                    { id: "build-scenario", label: "Build scenario", surface: "scenarios", title: "Build scenario", copy: "Turn a chat question into a local scenario plan." },
+                    { id: "find-evidence", label: "Find evidence", surface: "tax", title: "Find evidence", copy: "Ask for source-backed evidence without exposing raw documents unless approved." }
+                ]
+            },
+            {
+                id: "reports",
+                label: "Reports",
+                open: false,
+                question: "What story or export do I need?",
+                tabs: [
+                    { id: "monthly-story", label: "Monthly money story", surface: "reports", title: "Monthly money story", copy: "What happened, what changed, what needs review, and what evidence backs it." },
+                    { id: "forecast-report", label: "Forecast report", surface: "reports", title: "Forecast report", copy: "Forecast summary, assumptions, pressure days, scenarios, and evidence." },
+                    { id: "subscription-report", label: "Subscription report", surface: "reports", title: "Subscription report", copy: "Recurring payments, annual costs, review state, price changes, and cancellation status." },
+                    { id: "renewals-report", label: "Bills and renewals", surface: "reports", title: "Bills and renewals", copy: "Bills, contracts, notice periods, and renewal timeline." },
+                    { id: "evidence-report", label: "Evidence report", surface: "reports", title: "Evidence report", copy: "Freshness, gaps, matched receipts, NAS sources, and proof links." },
+                    { id: "refunds-report", label: "Refunds and disputes", surface: "reports", title: "Refunds and disputes", copy: "Refund promises, dispute packets, waiting state, and follow-up dates." },
+                    { id: "spending-change-report", label: "Spending change", surface: "reports", title: "Spending change", copy: "New merchants, changed categories, unusual charges, duplicate charges, and fees." },
+                    { id: "data-quality-report", label: "Data quality", surface: "reports", title: "Data quality", copy: "What is fresh, what is missing, what is inferred, and what needs repair." }
+                ]
+            },
+            {
+                id: "admin",
+                label: "Admin",
+                open: false,
+                question: "Is the system healthy and proven?",
+                tabs: [
+                    { id: "proof", label: "Proof", surface: "admin", title: "Proof", copy: "Postgres, pgvector, Workshop, Beast, browser QA, audits, and local route truth." },
+                    { id: "privacy", label: "Privacy", surface: "admin", title: "Privacy", copy: "Local-only boundaries, provider gates, excluded NAS paths, and blocked external actions." },
+                    { id: "ai-routing", label: "AI routing", surface: "admin", title: "AI routing", copy: "OpenRouter free, modest, and full-expensive tiers selected by reasoning level." },
+                    { id: "data-sources", label: "Data sources", surface: "admin", title: "Data sources", copy: "Postgres, pgvector, approved documents, NAS receipts, and import source state." },
+                    { id: "delivery-matrix", label: "Delivery matrix", surface: "admin", title: "Delivery matrix", copy: "The implementation matrix lives here, not in the normal user screen." }
+                ]
+            }
+        ];
+
+        const topSections = ["overview", "money-flow", "planning", "tools", "evidence", "chat", "reports", "admin"];
+
+        const tabContent = {
+            today: {
+                intro: "The first screen answers: what matters today, what changed, what is backed by evidence, and what can safely happen locally.",
+                rows: [
+                    ["Today’s money pulse", "One calm sentence", "Review reminders, debt scenario, and evidence before deciding."],
+                    ["Needs attention", "3 named rows", "Tax evidence review, credit card clean-down, and private health review."],
+                    ["Safe next step", "Review first", "Open exact rows, then create a local receipt if the decision should be remembered."]
+                ],
+                actions: ["openRows", "createReceipt", "searchEvidence"],
+                visuals: ["timeline", "evidenceChain"]
+            },
+            changed: {
+                intro: "Change is presented as a short story, not a data dump.",
+                rows: [
+                    ["New evidence", "Source-backed", "NAS and approved source documents are searchable through local pgvector."],
+                    ["New tools", "Absorbed into UI", "Subscriptions, forecast, imports, cancellation support, money memory, and reports are now navigable surfaces."],
+                    ["Proof hidden", "Admin only", "Technical runtime truth moved behind Admin/Proof."]
+                ],
+                actions: ["openRows", "createReceipt", "showProof"],
+                visuals: ["trend", "evidenceChain"]
+            },
+            "review-later": {
+                intro: "Useful but non-urgent items are parked so the app stays calm.",
+                rows: [
+                    ["Review later queue", "User control", "Save unclear subscriptions, renewals, missing receipts, and forecast assumptions."],
+                    ["Do-not-nag state", "Respectful", "If Mani has decided, the app should remember and stop repeating the same prompt."],
+                    ["Follow-up reminder", "Local only", "Create a local reminder rather than relying on memory."]
+                ],
+                actions: ["createReceipt", "openRows"],
+                visuals: ["timeline"]
+            },
+            focus: {
+                intro: "Focus mode collapses the product to the one thing worth doing next.",
+                rows: [
+                    ["One prompt", "Attention protected", "No reports, charts, proof, or admin detail in the default view."],
+                    ["One action", "Calm loop", "Notice, explain, evidence, action, relief."],
+                    ["One escape hatch", "User control", "Open details only when asked."]
+                ],
+                actions: ["createReceipt", "searchEvidence"],
+                visuals: ["evidenceChain"]
+            },
+            transactions: {
+                intro: "Transactions are treated as evidence-bearing rows, not anonymous lines.",
+                rows: [
+                    ["Merchant decoder", "Field helper", "APPLE.COM/BILL, PAYPAL, STRIPE, Amazon, and square labels can be explained and remembered."],
+                    ["Receipt link", "Proof", "Every transaction can show receipt, statement, import, or missing-evidence state."],
+                    ["Unusual charge", "Worth checking", "The app says worth reviewing, never shameful wording."]
+                ],
+                actions: ["openRows", "searchEvidence", "createReceipt"],
+                visuals: ["trend"]
+            },
+            bills: {
+                intro: "Bills should feel like timing support, not pressure.",
+                rows: [
+                    ["Bill calendar", "Click-to-open", "Upcoming bills, weekends, pressure days, and reminders."],
+                    ["Notice period", "Field utility", "Cancel-by and review-by dates appear beside renewals."],
+                    ["Reminder builder", "Local", "Create local review reminders without contacting providers."]
+                ],
+                actions: ["uploadFile", "openRows", "createReceipt"],
+                visuals: ["timeline"]
+            },
+            subscriptions: {
+                intro: "Recurring payments are one of the best money-leak tools for this era.",
+                rows: [
+                    ["Subscription Finder", "Scan pattern", "Find same merchant, similar amount, monthly/yearly cycles, trial conversions, and price changes."],
+                    ["Cancellation route", "User controlled", "Find account, platform, or support route; never auto-cancel."],
+                    ["Annual cost lens", "Field helper", "Show monthly cost as yearly impact with gentle wording."]
+                ],
+                actions: ["openRows", "createReceipt", "routeAi"],
+                visuals: ["annualCost", "timeline"]
+            },
+            refunds: {
+                intro: "Refunds and reimbursements are promises the user should not have to remember.",
+                rows: [
+                    ["Refund tracker", "Waiting state", "Expected, overdue, received, or needs follow-up."],
+                    ["Promise tracker", "Memory", "Reimbursements, support replies, and cancellation confirmations."],
+                    ["Follow-up script", "Copy-ready", "Prepare local text; no external send without approval."]
+                ],
+                actions: ["createReceipt", "openRows"],
+                visuals: ["timeline"]
+            },
+            fees: {
+                intro: "Small repeated charges are shown as review opportunities.",
+                rows: [
+                    ["Duplicate charge finder", "Compare", "Same amount, merchant, and date become a calm review row."],
+                    ["Fee finder", "Worth checking", "Bank, ATM, service, late, and foreign transaction fees."],
+                    ["Price change watch", "Trend", "Recurring payment increases get a gentle prompt."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["trend"]
+            },
+            merchants: {
+                intro: "Merchant memory stops the same confusion from happening every month.",
+                rows: [
+                    ["Merchant aliases", "Remember", "Messy payment labels can be named once and reused."],
+                    ["Trust notes", "User controlled", "Trusted, hard to cancel, refund pending, or needs review."],
+                    ["Split service", "Useful", "Apple or Google charges may represent several services."]
+                ],
+                actions: ["createReceipt", "searchEvidence"],
+                visuals: ["evidenceChain"]
+            },
+            forecast: {
+                intro: "Forecasts are humble: based on known local evidence, with assumptions visible only when opened.",
+                rows: [
+                    ["Month-end forecast", "Estimate", "Expected income, bills, variable spend, and projected leftover."],
+                    ["Bill pressure", "Timing", "Shows the lowest expected buffer day and why."],
+                    ["Assumptions", "User control", "Include/exclude subscriptions, refunds, unusual purchases, or planned spends."]
+                ],
+                actions: ["openRows", "createReceipt", "routeAi"],
+                visuals: ["timeline", "trend"]
+            },
+            "run-rate": {
+                intro: "Run rate turns spending pace into a calm, current-month story.",
+                rows: [
+                    ["Daily pace", "Plain English", "At this pace, variable spending may finish above the comfort target."],
+                    ["Category pace", "Drilldown", "Groceries, transport, eating out, subscriptions, and other categories."],
+                    ["Comfort target", "Personal", "The app compares against the user's calm target, not a generic rule."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["trend", "annualCost"]
+            },
+            scenarios: {
+                intro: "Scenarios show impact before commitment; they do not make real-world changes.",
+                rows: [
+                    ["Can I do this?", "Local what-if", "Try purchase, cancellation, bill timing, refund delay, or income change."],
+                    ["Compare choices", "Before/after", "Buy now vs wait; keep vs cancel; pay now vs next week."],
+                    ["Decision log", "Memory", "Save why the user chose something and when to review it."]
+                ],
+                actions: ["openRows", "createReceipt", "routeAi"],
+                visuals: ["comparison", "timeline"]
+            },
+            "safe-to-spend": {
+                intro: "Safe-to-spend is an estimate with clear boundaries, not advice.",
+                rows: [
+                    ["Flexible amount", "Estimate", "Known bills, buffer target, subscriptions, and usual spend remain protected."],
+                    ["Not included", "Honest", "Missing transactions, cash spend, unknown future costs, and blocked bank data."],
+                    ["Adjust assumptions", "User control", "The user can change the calculation context."]
+                ],
+                actions: ["createReceipt", "openRows"],
+                visuals: ["comparison"]
+            },
+            "sinking-funds": {
+                intro: "Sinking funds make annual costs calmer by translating them into monthly rhythm.",
+                rows: [
+                    ["Annual cost", "Monthly pace", "Insurance, domains, car costs, tax reserve, holidays, repairs."],
+                    ["Future Me calendar", "Timeline", "Shows future financial moments without forcing action."],
+                    ["Pause or adjust", "User control", "Goals can be hidden, paused, or changed."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["annualCost"]
+            },
+            goals: {
+                intro: "Goals use calm targets rather than aggressive optimisation.",
+                rows: [
+                    ["Emergency buffer", "Comfort", "Shows target, current progress, and likely date."],
+                    ["Future self fund", "Small steps", "Turns far dates into weekly numbers."],
+                    ["Goal memory", "Review", "Saves why a goal changed."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["trend"]
+            },
+            reminders: {
+                intro: "Reminders are local, calm, and user-controlled.",
+                rows: [
+                    ["Bill reminders", "Due dates", "Lead days and cadence are visible."],
+                    ["Trial and renewal watch", "Timing", "Remind before conversion, renewal, or notice deadline."],
+                    ["Snooze, pin, hide", "Control", "Attention belongs to the user."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["timeline"]
+            },
+            "money-tools": {
+                intro: "Tools are small work surfaces, not dashboard clutter.",
+                rows: [
+                    ["Find subscriptions", "Money leak", "Detect recurring payments, trials, and price changes."],
+                    ["Find duplicates", "Protection", "Catch repeated charges and fee patterns."],
+                    ["Track refunds", "Memory", "Expected money events stay visible until resolved."]
+                ],
+                actions: ["openRows", "createReceipt", "searchEvidence"],
+                visuals: ["evidenceChain"]
+            },
+            import: {
+                intro: "Imports accept the messy finance reality: Excel, CSV, PDF, receipts, statements, and notes.",
+                rows: [
+                    ["Excel and CSV", "Map columns", "Date, description, debit, credit, balance, account, category."],
+                    ["PDF bills", "Extract fields", "Merchant, amount, due date, account reference, billing period."],
+                    ["Import receipt", "Rollback state", "Preview before trusting; source confidence remains visible."]
+                ],
+                actions: ["openRows", "createReceipt"],
+                visuals: ["evidenceChain"]
+            },
+            cancellation: {
+                intro: "The app helps find the route but keeps the user in control of cancellation.",
+                rows: [
+                    ["Find page", "Safe", "Open likely account, billing, Apple, Google, PayPal, Amazon, Microsoft, or support route."],
+                    ["Not visible", "Fallback", "Search receipts, copy support request, create follow-up reminder, save investigation packet."],
+                    ["Confirmation tracker", "Memory", "Route found, in progress, confirmed, still charged, or unresolved."]
+                ],
+                actions: ["createReceipt", "searchEvidence", "routeAi"],
+                visuals: ["timeline"]
+            },
+            renewals: {
+                intro: "Renewals, contracts, and notice periods become visible before they become expensive.",
+                rows: [
+                    ["Renewal centre", "Upcoming", "Insurance, domains, software, memberships, phone, broadband, car registration."],
+                    ["Notice watch", "Cancel by", "Shows the last calm day to act."],
+                    ["Warranty tracker", "Useful", "Return windows and warranty evidence stay linked to receipts."]
+                ],
+                actions: ["createReceipt", "openRows"],
+                visuals: ["timeline"]
+            },
+            disputes: {
+                intro: "Dispute packs organise evidence without contacting banks or merchants.",
+                rows: [
+                    ["Suspicious charge", "Packet", "Transaction, receipt, merchant note, timeline, and screenshot checklist."],
+                    ["Copy summary", "User action", "The app prepares text; user chooses whether to send."],
+                    ["Status", "Track", "Not reviewed, disputed, waiting, resolved."]
+                ],
+                actions: ["createReport", "createReceipt", "openRows"],
+                visuals: ["evidenceChain"]
+            },
+            "money-memory": {
+                intro: "Memory reduces repeated thinking.",
+                rows: [
+                    ["Decision log", "Why", "Kept, cancelled, delayed, reviewed, or no longer relevant."],
+                    ["Money timeline", "Story", "Income arrived, bill paid, subscription reviewed, refund waiting."],
+                    ["Nothing to do", "Relief", "Sometimes the best UI is a calm note that nothing urgent needs attention."]
+                ],
+                actions: ["createReceipt", "openRows"],
+                visuals: ["timeline"]
+            },
+            rules: {
+                intro: "Money rules let the user tune the app instead of tolerating noise.",
+                rows: [
+                    ["Tone", "Calm/direct/detailed", "The same insight can be shorter, clearer, or fuller."],
+                    ["Alert intensity", "Only useful", "Urgent only, important and useful, or everything."],
+                    ["Local rules", "Personal", "Always remind before bills over a threshold; hide selected categories; exclude bonuses from default forecast."]
+                ],
+                actions: ["createReceipt"],
+                visuals: ["comparison"]
+            },
+            "evidence-search": {
+                intro: "Evidence search is the trust layer behind money claims.",
+                rows: [
+                    ["pgvector search", "Local", "Search approved docs and NAS chunks without SQLite fallback."],
+                    ["Source freshness", "Trust", "Fresh today, old, missing, or needs one more source."],
+                    ["Evidence comfort", "Plain labels", "Looks good, needs one more source, source not found yet."]
+                ],
+                actions: ["searchEvidence", "indexNas", "openRows"],
+                visuals: ["evidenceChain"]
+            },
+            "receipt-matcher": {
+                intro: "Receipt matcher links proof to money rows.",
+                rows: [
+                    ["Match receipt", "Confirm", "Transaction to invoice, PDF, image, or statement row."],
+                    ["Wrong match", "Control", "The user can reject bad evidence."],
+                    ["Warranty clue", "Extra value", "Return windows and warranty dates can be created from receipts."]
+                ],
+                actions: ["searchEvidence", "createReceipt"],
+                visuals: ["evidenceChain"]
+            },
+            "evidence-gaps": {
+                intro: "Evidence gaps are repair tasks, not failures.",
+                rows: [
+                    ["Missing receipt", "Needs source", "Open import, search NAS, or ignore this month."],
+                    ["Unknown merchant", "Needs name", "Decode or teach the app."],
+                    ["Forecast assumption", "Needs confirmation", "Mark included, excluded, or uncertain."]
+                ],
+                actions: ["searchEvidence", "createReceipt"],
+                visuals: ["comparison"]
+            },
+            "tax-pack": {
+                intro: "Tax evidence pack organises proof only. It is not tax advice.",
+                rows: [
+                    ["Possible evidence", "Review", "Work software, subscriptions, invoices, receipts, and notes."],
+                    ["Mask sensitive fields", "Safe export", "Exports should show what is included and excluded."],
+                    ["Professional boundary", "Clear", "Qualified tax advice remains external and approval-gated."]
+                ],
+                actions: ["createReport", "searchEvidence"],
+                visuals: ["evidenceChain"]
+            },
+            "nas-sources": {
+                intro: "NAS indexing is explicit, bounded, and proof-backed.",
+                rows: [
+                    ["Approved roots", "Local", "\\\\NAS2\\amtl-documents and \\\\NAS1\\Nas."],
+                    ["Excluded paths", "Strict", "Only the two user-named prefixes are excluded."],
+                    ["Receipt", "Proof", "Indexing writes a local receipt with scanned, indexed, skipped, and blocked counts."]
+                ],
+                actions: ["indexNas", "searchEvidence", "showProof"],
+                visuals: ["evidenceChain"]
+            },
+            "ask-money": {
+                intro: "Chat is a second control surface over the same app, not a separate toy.",
+                rows: [
+                    ["Ask", "Natural", "What changed this week? What should I review? What evidence supports this?"],
+                    ["Act", "Buttons", "Open rows, show evidence, create reminder, run scenario, generate report."],
+                    ["No guessing", "Safe", "If evidence is missing, the chat says so and offers search/import/reminder."]
+                ],
+                actions: ["routeAi", "searchEvidence", "openRows"],
+                visuals: ["evidenceChain"]
+            },
+            "explain-this": {
+                intro: "Explain This replaces generic helper cards with selected-item explanation.",
+                rows: [
+                    ["What", "Selected", "Explains the clicked row, count, bill, merchant, report, or action."],
+                    ["Why", "Context", "Why it matters now and what the next useful action is."],
+                    ["Evidence", "Trust", "Shows source and freshness when relevant."]
+                ],
+                actions: ["routeAi", "createReceipt"],
+                visuals: ["comparison"]
+            },
+            "build-scenario": {
+                intro: "Chat can draft a local scenario and open the scenario planner.",
+                rows: [
+                    ["Question", "Input", "What happens if I spend 350 this week?"],
+                    ["Output", "Local", "Before/after buffer and assumptions."],
+                    ["Receipt", "Memory", "Save only if the user asks."]
+                ],
+                actions: ["routeAi", "createReceipt", "openRows"],
+                visuals: ["comparison"]
+            },
+            "find-evidence": {
+                intro: "Chat can search evidence and return source-backed snippets.",
+                rows: [
+                    ["Search", "Local", "Runs pgvector over approved evidence."],
+                    ["Summarise", "Gated", "OpenRouter is route-only unless explicitly executed and approved."],
+                    ["Open rows", "Control", "The user can inspect the exact sources."]
+                ],
+                actions: ["searchEvidence", "routeAi"],
+                visuals: ["evidenceChain"]
+            },
+            "monthly-story": {
+                intro: "Reports stay in the left menu; visuals open by button.",
+                rows: [
+                    ["What happened", "Story", "Month summary, change drivers, bills, subscriptions, evidence gaps."],
+                    ["Next month", "Useful", "Review queue and local reminders."],
+                    ["Export", "Local", "PDF/DOCX later; current runtime creates local report receipts."]
+                ],
+                actions: ["createReport", "openRows"],
+                visuals: ["timeline", "trend", "evidenceChain"]
+            },
+            "forecast-report": {
+                intro: "Forecast report keeps assumptions separate from the summary.",
+                rows: [
+                    ["Month-end", "Estimate", "Projected leftover and lowest expected buffer."],
+                    ["Run rate", "Pace", "Variable spend against comfort target."],
+                    ["Scenarios", "Compare", "Before/after choices."]
+                ],
+                actions: ["createReport", "routeAi"],
+                visuals: ["timeline", "comparison"]
+            },
+            "subscription-report": {
+                intro: "Subscription report gives a clean review list.",
+                rows: [
+                    ["Annual cost", "Lens", "Monthly charges shown as yearly impact."],
+                    ["Cancellation status", "Track", "Route found, in progress, confirmed, unresolved."],
+                    ["Uncertain", "Review", "Unknown recurring payments stay visible but calm."]
+                ],
+                actions: ["createReport", "createReceipt"],
+                visuals: ["annualCost", "timeline"]
+            },
+            "renewals-report": {
+                intro: "Bills and renewals report is a timing map.",
+                rows: [
+                    ["Calendar", "Upcoming", "Bills, contracts, notice periods, and renewals."],
+                    ["Pressure days", "Forecast", "Where bills cluster."],
+                    ["Actions", "Local", "Create reminders and save review receipts."]
+                ],
+                actions: ["createReport", "createReceipt"],
+                visuals: ["timeline"]
+            },
+            "evidence-report": {
+                intro: "Evidence report is for trust and repair.",
+                rows: [
+                    ["Freshness", "Trust", "What is current, old, missing, or inferred."],
+                    ["Matched", "Proof", "Receipt and source coverage."],
+                    ["NAS", "Boundary", "Approved roots and excluded paths."]
+                ],
+                actions: ["createReport", "searchEvidence", "indexNas"],
+                visuals: ["evidenceChain"]
+            },
+            "refunds-report": {
+                intro: "Refunds and disputes report keeps waiting items from disappearing.",
+                rows: [
+                    ["Waiting", "Timeline", "Refunds, reimbursements, support replies, and cancellation confirmations."],
+                    ["Overdue", "Calm", "Worth checking, not panic."],
+                    ["Packet", "Proof", "Export evidence pack locally."]
+                ],
+                actions: ["createReport", "createReceipt"],
+                visuals: ["timeline"]
+            },
+            "spending-change-report": {
+                intro: "Spending change report explains movement, not failure.",
+                rows: [
+                    ["Category change", "Before/after", "What moved compared with last month."],
+                    ["New merchant", "Review", "New labels and uncertain rows."],
+                    ["Fees and duplicates", "Protection", "Small leaks surfaced gently."]
+                ],
+                actions: ["createReport", "openRows"],
+                visuals: ["trend", "comparison"]
+            },
+            "data-quality-report": {
+                intro: "Data quality belongs in Reports/Admin, not the daily money surface.",
+                rows: [
+                    ["Fresh", "Known", "What the app can safely trust."],
+                    ["Missing", "Repair", "Imports, unknown merchants, unmatched receipts, forecast assumptions."],
+                    ["Blocked", "Honest", "Bank/CDR, source writes, regulated advice, and public release need approval/targets."]
+                ],
+                actions: ["createReport", "showProof"],
+                visuals: ["comparison"]
+            },
+            proof: {
+                intro: "Technical proof stays behind Admin.",
+                rows: [
+                    ["Postgres", "Required", "SQLite is not a CK Personal Finance DONE path."],
+                    ["pgvector", "Active", "finance_document_evidence.embedding vector search."],
+                    ["Workshop and Beast", "Registered", "Port and friendly route truth proved."]
+                ],
+                actions: ["runAudit", "showProof"],
+                visuals: ["evidenceChain"]
+            },
+            privacy: {
+                intro: "Privacy states what the product will and will not do.",
+                rows: [
+                    ["Local only", "Default", "No bank API, no payment, no external write."],
+                    ["AI provider", "OpenRouter", "Route-only by default; execution needs key and approval flags."],
+                    ["External blockers", "Honest", "Bank/CDR, source/customer writes, regulated advice, deploy/push/public release."]
+                ],
+                actions: ["copyPrivacy", "showProof"],
+                visuals: ["comparison"]
+            },
+            "ai-routing": {
+                intro: "AI routing is cost-aware and hidden from normal money screens.",
+                rows: [
+                    ["Free", "Routine", "Small explanations and low reasoning tasks."],
+                    ["A little bit expensive", "Medium", "Scenario explanations and evidence summaries."],
+                    ["Full expensive", "Deep", "High reasoning only when enabled and approved."]
+                ],
+                actions: ["routeAi", "showProof"],
+                visuals: ["comparison"]
+            },
+            "data-sources": {
+                intro: "Data sources describe what feeds the app.",
+                rows: [
+                    ["Postgres", "Runtime", "Active serious data path."],
+                    ["Approved docs", "RAG", "Product docs and evidence indexed locally."],
+                    ["NAS", "Approved", "Only user-approved roots and exclusions."]
+                ],
+                actions: ["indexNas", "searchEvidence", "showProof"],
+                visuals: ["evidenceChain"]
+            },
+            "delivery-matrix": {
+                intro: "The matrix is proof for operators, not normal-user content.",
+                rows: [
+                    ["Local/internal", "Done", "Safe rows implemented and proved."],
+                    ["Beyond local safe paths", "Done", "Approved NAS and OpenRouter free live proof recorded."],
+                    ["True blockers", "External", "Need targets, credentials, contracts, or approval."]
+                ],
+                actions: ["runAudit", "showProof"],
+                visuals: ["comparison"]
+            }
+        };
+
+        const actionHandlers = {
+            openRows: { label: "Open exact rows", run: () => setOutput("Exact named rows are open in the right detail panel for this tab.") },
+            createReceipt: { label: "Create review receipt", run: createReceipt },
+            uploadFile: { label: "Upload CSV/PDF", run: uploadCsvPdf },
+            searchEvidence: { label: "Search evidence", run: searchEvidence },
+            indexNas: { label: "Index NAS sources", run: indexNasSources },
+            createReport: { label: "Create local report", run: createReport },
+            routeAi: { label: "Route AI task", run: routeAiTask },
+            runAudit: { label: "Run audit loop", run: runAudit },
+            copyPrivacy: { label: "Copy privacy receipt", run: copyPrivacy },
+            showProof: { label: "Show proof", run: () => selectTab("admin", "proof") }
+        };
+
+        const visualLabels = {
+            timeline: "Timeline",
+            trend: "Trend",
+            comparison: "Compare",
+            evidenceChain: "Evidence map",
+            annualCost: "Annual cost"
+        };
+
+        const helperText = {
+            why: {
+                label: "Why this matters",
+                default: "This panel turns the selected thing into one reason, one proof path, and one next safe action."
+            },
+            evidence: {
+                label: "Evidence",
+                default: "Evidence is source-linked where available. Missing evidence is labelled as a repair task, not hidden."
+            },
+            next: {
+                label: "Next action",
+                default: "Open exact rows first. Then create a local receipt, reminder, report, search, or scenario if it helps."
+            },
+            safety: {
+                label: "Safety",
+                default: "No payment, cancellation, bank connection, provider call, external send, or regulated advice happens silently."
+            }
+        };
+
+        function currentSection() {
+            return sections.find((section) => section.id === state.section) || sections[0];
+        }
+
+        function currentTab() {
+            return currentSection().tabs.find((tab) => tab.id === state.tab) || currentSection().tabs[0];
+        }
+
+        function currentContent() {
+            return tabContent[state.tab] || tabContent.today;
+        }
+
+        function renderNav() {
+            document.getElementById("leftNav").innerHTML = sections.map((section) => `
+                <details ${section.id === state.section ? "open" : ""}>
+                    <summary>${escapeHtml(section.label)}</summary>
+                    <div class="meta">${escapeHtml(section.question)}</div>
+                    <div class="nav-items">
+                        ${section.tabs.map((tab) => `
+                            <button class="nav-button ${state.tab === tab.id ? "active" : ""}" data-section="${section.id}" data-tab="${tab.id}">
+                                ${escapeHtml(tab.label)}
+                            </button>
+                        `).join("")}
+                    </div>
+                </details>
+            `).join("");
+            document.querySelectorAll(".nav-button").forEach((button) => {
+                button.addEventListener("click", () => selectTab(button.dataset.section, button.dataset.tab));
+            });
+        }
+
+        function renderTopSegments() {
+            document.getElementById("topSegments").innerHTML = topSections.map((sectionId) => {
+                const section = sections.find((item) => item.id === sectionId);
+                return `<button class="segment ${state.section === sectionId ? "active" : ""}" data-top-section="${sectionId}">${escapeHtml(section.label)}</button>`;
+            }).join("");
+            document.querySelectorAll("[data-top-section]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const section = sections.find((item) => item.id === button.dataset.topSection);
+                    selectTab(section.id, section.tabs[0].id);
+                });
+            });
+        }
+
+        function renderSubTabs() {
+            document.getElementById("subTabs").innerHTML = currentSection().tabs.map((tab) => `
+                <button class="tab-button ${state.tab === tab.id ? "active" : ""}" data-subtab="${tab.id}">${escapeHtml(tab.label)}</button>
+            `).join("");
+            document.querySelectorAll("[data-subtab]").forEach((button) => {
+                button.addEventListener("click", () => selectTab(state.section, button.dataset.subtab));
+            });
+        }
+
+        function formatLocalDate() {
+            const now = new Date();
+            const day = new Intl.DateTimeFormat("en-AU", { day: "2-digit" }).format(now);
+            const month = new Intl.DateTimeFormat("en-AU", { month: "short" }).format(now).slice(0, 3);
+            document.getElementById("datePart").textContent = `${day} ${month}`;
+            document.getElementById("dayPart").textContent = new Intl.DateTimeFormat("en-AU", { weekday: "long" }).format(now);
+            document.getElementById("timePart").textContent = new Intl.DateTimeFormat("en-AU", { hour: "2-digit", minute: "2-digit" }).format(now);
+        }
+
+        async function load() {
+            formatLocalDate();
+            renderNav();
+            renderTopSegments();
+            renderSubTabs();
+            const [cockpit, actions] = await Promise.all([
+                fetch(apiUrl("/api/personal-finance/cockpit")).then((response) => response.json()),
+                fetch(apiUrl("/api/personal-finance/actions")).then((response) => response.json())
+            ]);
+            state.cockpit = cockpit;
+            state.actions = actions;
+            document.getElementById("weatherPart").textContent = cockpit.claim.done_local_internal
+                ? "Weather/status: local runtime healthy"
+                : "Weather/status: local runtime needs proof";
+            const wisdom = nextPrompt(cockpit);
+            document.getElementById("promptSource").textContent = wisdom.source;
+            document.getElementById("moneyPrompt").textContent = wisdom.text;
+            document.getElementById("nextAction").textContent = actions.next_best_slice;
+            await loadDrilldown(currentTab().surface);
+            render();
+        }
+
+        function nextPrompt(cockpit) {
+            const reminders = cockpit.persistence.table_counts.finance_reminders || 0;
+            const evidence = cockpit.persistence.table_counts.finance_document_evidence || 0;
+            const index = Math.abs((reminders * 7 + evidence) % financeWisdom.length);
+            const wisdom = financeWisdom[index];
+            return {
+                source: wisdom.source,
+                text: `${wisdom.text} Today: ${reminders} reminders, ${evidence} evidence chunks, and only one opened tool at a time.`
+            };
+        }
+
+        async function selectTab(sectionId, tabId) {
+            state.section = sectionId;
+            state.tab = tabId;
+            state.visual = null;
+            const tab = currentTab();
+            await loadDrilldown(tab.surface);
+            render();
+        }
+
+        async function loadDrilldown(surface) {
+            state.drilldown = await fetch(apiUrl(`/api/personal-finance/drilldown/${encodeURIComponent(surface)}`)).then((response) => response.json());
+        }
+
+        function render() {
+            renderNav();
+            renderTopSegments();
+            renderSubTabs();
+            renderHeader();
+            renderMetrics();
+            renderWork();
+            renderDetails();
+            renderActions();
+            renderVisual();
+            renderHelper();
+            renderAdmin();
+        }
+
+        function renderHeader() {
+            const section = currentSection();
+            const tab = currentTab();
+            document.getElementById("breadcrumb").textContent = section.label;
+            document.getElementById("screenTitle").textContent = tab.title;
+            document.getElementById("screenCopy").textContent = tab.copy;
+            document.getElementById("modePill").textContent = state.cockpit?.claim.done_local_internal ? "Local internal ready" : "Local proof running";
+            document.getElementById("adminProofCard").classList.toggle("hidden", state.section !== "admin");
+        }
+
+        function renderMetrics() {
+            const counts = state.cockpit.persistence.table_counts;
+            const metrics = [
+                ["Reminders", counts.finance_reminders, "planning", "reminders"],
+                ["Scenarios", counts.scenario_plans, "planning", "scenarios"],
+                ["Evidence chunks", counts.finance_document_evidence, "evidence", "evidence-search"],
+                ["Reports", counts.report_exports, "reports", "monthly-story"]
+            ];
+            document.getElementById("metricGrid").innerHTML = metrics.map(([label, value, section, tab]) => `
+                <button class="metric" data-metric-section="${section}" data-metric-tab="${tab}">
+                    <strong>${Number(value || 0).toLocaleString()}</strong><span>${escapeHtml(label)}</span>
+                </button>
+            `).join("");
+            document.querySelectorAll("[data-metric-section]").forEach((button) => {
+                button.addEventListener("click", () => selectTab(button.dataset.metricSection, button.dataset.metricTab));
+            });
+        }
+
+        function renderWork() {
+            const content = currentContent();
+            document.getElementById("activeTabLabel").textContent = currentTab().label;
+            document.getElementById("workTitle").textContent = currentTab().title;
+            document.getElementById("workIntro").textContent = content.intro;
+            document.getElementById("workList").innerHTML = content.rows.slice(0, 1).map(([title, status, text]) => `
+                <article class="row-panel">
+                    <div>
+                        <strong>${escapeHtml(title)}</strong>
+                        <p class="muted">${escapeHtml(text)}</p>
+                    </div>
+                    <span class="status-pill">${escapeHtml(status)}</span>
+                </article>
+            `).join("");
+        }
+
+        function renderDetails() {
+            const rows = state.drilldown?.named_rows || {};
+            const list = [];
+            if (rows.savings_goals) rows.savings_goals.forEach((row) => list.push(["Goal", `${row.name}: ${money(row.saved_amount)} saved of ${money(row.target_amount)}`]));
+            if (rows.debt_plans) rows.debt_plans.forEach((row) => list.push(["Debt", `${row.name}: ${money(row.current_balance)} remaining, ${money(row.repayment_amount)} ${row.repayment_frequency}`]));
+            if (rows.reminders) rows.reminders.forEach((row) => list.push(["Reminder", `${row.title}: ${row.due_date}, ${row.status}`]));
+            if (rows.scenarios) rows.scenarios.forEach((row) => list.push(["Scenario", `${row.name}: ${row.scenario_type}`]));
+            if (rows.reports) rows.reports.forEach((row) => list.push(["Report", `${row.title}: ${row.external_send_state}`]));
+            if (rows.helpers) rows.helpers.slice(0, 4).forEach((row) => list.push(["Field helper", `${row.field_name}: ${row.micro_action}`]));
+            const toolRows = currentContent().rows.slice(0, 2).map(([title, status, text]) => [status, `${title}: ${text}`]);
+            document.getElementById("detailTitle").textContent = "Exact named rows";
+            document.getElementById("detailRows").innerHTML = [...toolRows, ...list].slice(0, 5).map(([label, text]) => `
+                <article class="row-panel">
+                    <div><span class="meta">${escapeHtml(label)}</span><p>${escapeHtml(text)}</p></div>
+                    <button class="action" data-explain="${escapeHtml(label)}">Explain</button>
+                </article>
+            `).join("") || `<p class="muted">No named rows found for this view.</p>`;
+            document.querySelectorAll("[data-explain]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    state.helperKey = "why";
+                    setOutput(`${button.dataset.explain} is now explained in the contextual helper.`);
+                    renderHelper();
+                });
+            });
+        }
+
+        function renderActions() {
+            const actions = currentContent().actions || ["openRows", "createReceipt"];
+            const visualButtons = currentContent().visuals || [];
+            document.getElementById("actionBar").innerHTML = [
+                ...actions.map((id) => `<button class="action" data-action="${id}">${escapeHtml(actionHandlers[id].label)}</button>`),
+                ...visualButtons.map((id) => `<button class="visual-button" data-visual="${id}">${escapeHtml(visualLabels[id])}</button>`)
+            ].join("");
+            document.querySelectorAll("[data-action]").forEach((button) => {
+                button.addEventListener("click", () => actionHandlers[button.dataset.action].run());
+            });
+            document.querySelectorAll("[data-visual]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    state.visual = state.visual === button.dataset.visual ? null : button.dataset.visual;
+                    renderVisual();
+                });
+            });
+            document.getElementById("actionOutput").textContent = state.lastAction;
+        }
+
+        function renderVisual() {
+            const shelf = document.getElementById("visualShelf");
+            shelf.classList.toggle("open", Boolean(state.visual));
+            if (!state.visual) {
+                shelf.innerHTML = "";
+                return;
+            }
+            const title = visualLabels[state.visual] || "Visual";
+            const bodies = {
+                timeline: `<div class="timeline"><div><strong>Today</strong><br>Review pulse</div><div><strong>Next bill</strong><br>Reminder ready</div><div><strong>Pressure day</strong><br>Scenario available</div><div><strong>Review</strong><br>Report when asked</div></div>`,
+                trend: `<div class="mini-grid"><div class="mini-card"><strong>Run rate</strong><div class="bar" style="--bar: 62%"></div><p class="muted">Pace is shown as a comfort check.</p></div><div class="mini-card"><strong>Change</strong><div class="bar" style="--bar: 44%"></div><p class="muted">Open rows before deciding.</p></div></div>`,
+                comparison: `<div class="mini-grid"><div class="mini-card"><strong>Before</strong><p class="muted">Known bills, current pace, current buffer.</p></div><div class="mini-card"><strong>After</strong><p class="muted">Local scenario result only; no external action.</p></div></div>`,
+                evidenceChain: `<div class="timeline"><div><strong>Row</strong><br>Named item</div><div><strong>Source</strong><br>Receipt/import</div><div><strong>Evidence</strong><br>pgvector search</div><div><strong>Receipt</strong><br>Local proof</div></div>`,
+                annualCost: `<div class="mini-grid"><div class="mini-card"><strong>Monthly</strong><p class="muted">Recurring amount and next likely charge.</p></div><div class="mini-card"><strong>Annualised</strong><p class="muted">Yearly impact shown gently.</p></div></div>`
+            };
+            shelf.innerHTML = `<div class="meta">Opened visual</div><h3>${escapeHtml(title)}</h3>${bodies[state.visual] || ""}`;
+        }
+
+        function renderHelper() {
+            const content = currentContent();
+            document.getElementById("helperTitle").textContent = currentTab().title;
+            document.getElementById("helperSummary").textContent = `${currentSection().question} ${content.intro}`;
+            document.getElementById("helperButtons").innerHTML = Object.entries(helperText).map(([key, item]) => `
+                <button class="helper-chip ${state.helperKey === key ? "active" : ""}" data-helper="${key}">${escapeHtml(item.label)}</button>
+            `).join("");
+            document.querySelectorAll("[data-helper]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    state.helperKey = button.dataset.helper;
+                    renderHelper();
+                });
+            });
+            document.getElementById("helperBody").textContent = helperText[state.helperKey].default;
+            const firstRow = content.rows[0] || ["Selected item", "Context", "Open a row to see detail."];
+            document.getElementById("helperDetails").innerHTML = `
+                <details>
+                    <summary>Selected thing</summary>
+                    <p class="muted">${escapeHtml(firstRow[0])}: ${escapeHtml(firstRow[2])}</p>
+                </details>
+                <details>
+                    <summary>Why shown here</summary>
+                    <p class="muted">It reduces memory burden, cost/risk confusion, or evidence uncertainty for this exact tab.</p>
+                </details>
+                <details>
+                    <summary>Safe boundary</summary>
+                    <p class="muted">The app can create local receipts, search evidence, route AI, and prepare reports. It cannot silently cancel, pay, connect banks, send externally, or give regulated advice.</p>
+                </details>
+            `;
+        }
+
+        function renderAdmin() {
+            const c = state.cockpit;
+            const rows = [
+                ["Claim", c.claim.done_local_internal ? "DONE_LOCAL_INTERNAL allowed for local/internal scope" : c.claim.reason],
+                ["Database", `${c.database.store_kind}; ${c.database.postgres_truth}`],
+                ["pgvector", `${c.database.pgvector_truth.version}; ${c.database.pgvector_truth.embedding_column}`],
+                ["RAG", `${c.rag.truth}; chunks ${c.persistence.table_counts.finance_document_evidence}`],
+                ["OpenRouter", `${c.ai_provider.default_execution}; key configured ${c.ai_provider.key_configured}`],
+                ["500 idea absorption", "Implemented as field utilities, grouped navigation, tabs, click-open visuals, contextual helper, reports, tools, and user controls."],
+                ["External writes", "Disabled"],
+            ];
+            document.getElementById("adminProof").innerHTML = rows.map(([label, value]) => `
+                <div class="proof-row"><strong>${escapeHtml(label)}</strong><br><span class="muted">${escapeHtml(value)}</span></div>
+            `).join("");
+        }
+
+        function setOutput(text) {
+            state.lastAction = text;
+            document.getElementById("actionOutput").textContent = text;
+        }
+
+        async function createReceipt() {
+            const receipt = await fetch(apiUrl("/api/personal-finance/receipts"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ decision_type: `ui_${state.tab}`, context: `UI action from ${currentSection().label} / ${currentTab().label}` })
+            }).then((response) => response.json());
+            setOutput(`Receipt ${receipt.receipt_id} created locally. ${receipt.boundary}`);
+            await load();
+        }
+
+        async function searchEvidence() {
+            const result = await fetch(apiUrl("/api/personal-finance/rag/search?q=tax%20evidence&limit=3")).then((response) => response.json());
+            const first = result.results?.[0];
+            setOutput(first ? `Evidence result: ${first.title} (${Number(first.score).toFixed(3)}). Source: ${first.source_path}` : "No evidence result returned.");
+            await loadDrilldown("tax");
+            render();
+        }
+
+        async function createReport() {
+            const report = await fetch(apiUrl("/api/personal-finance/reports"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ report_type: state.tab })
+            }).then((response) => response.json());
+            setOutput(`Report export ${report.export_id} created locally. External send state: ${report.external_send_state}.`);
+            await load();
+        }
+
+        async function uploadCsvPdf() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".csv,.pdf,text/csv,application/pdf";
+            input.addEventListener("change", async () => {
+                const file = input.files && input.files[0];
+                if (!file) return;
+
+                const form = new FormData();
+                form.append("file", file);
+                setOutput(`Uploading ${file.name} locally. Nothing leaves this machine.`);
+
+                const response = await fetch(apiUrl("/api/personal-finance/uploads"), {
+                    method: "POST",
+                    body: form
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    setOutput(`Upload blocked: ${data.detail || "Only CSV and PDF local evidence is accepted."}`);
+                    return;
+                }
+
+                setOutput(`Upload receipt ${data.receipt_id}: ${data.original_filename} saved locally, indexed ${data.indexed_chunks} chunks. External send: ${data.external_send}.`);
+                await load();
+            }, { once: true });
+            input.click();
+        }
+
+        async function indexNasSources() {
+            const result = await fetch(apiUrl("/api/personal-finance/sources/nas/index"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ max_files: 30, max_chunks_per_file: 2 })
+            }).then((response) => response.json());
+            setOutput(`NAS index receipt ${result.receipt_id}: scanned ${result.scanned_files}, indexed ${result.indexed_chunks}, skipped ${result.skipped_files}, blocked ${result.blocked_files}.`);
+            await load();
+        }
+
+        async function routeAiTask() {
+            const level = ["forecast", "scenarios", "ask-money", "build-scenario"].includes(state.tab) ? "medium" : "low";
+            const result = await fetch(apiUrl("/api/personal-finance/ai/route"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task_kind: `ui_${state.tab}`, reasoning_level: level, max_cost_tier: "modest" })
+            }).then((response) => response.json());
+            setOutput(`OpenRouter route: ${result.route.label} (${result.route.tier}) using ${result.route.model}. Provider called: ${result.provider_called}.`);
+        }
+
+        async function runAudit() {
+            const result = await fetch(apiUrl("/api/personal-finance/audit/5"), { method: "POST" }).then((response) => response.json());
+            setOutput(`Audit ${result.iteration}: done ${result.done}, partial ${result.partial}, blocked ${result.blocked}, missing ${result.missing}.`);
+            await load();
+        }
+
+        async function copyPrivacy() {
+            const text = "CK Personal Finance local/internal: no regulated financial advice, no bank API, OpenRouter only behind explicit approval, no external write.";
+            await navigator.clipboard.writeText(text).catch(() => {});
+            setOutput(text);
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 }).format(Number(value || 0));
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            }[char]));
+        }
+
+        formatLocalDate();
+        renderNav();
+        renderTopSegments();
+        renderSubTabs();
+        renderHelper();
+
+        load().catch((error) => {
+            document.getElementById("weatherPart").textContent = "Weather/status: runtime error";
+            document.getElementById("actionOutput").textContent = `Runtime load failed: ${error}`;
+        });
+    </script>
 </body>
 </html>

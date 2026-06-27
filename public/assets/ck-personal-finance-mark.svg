@@ -1,0 +1,12 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">CK Personal Finance logo</title>
+  <desc id="desc">A calm local ledger mark with CK initials, a balance line, and a small protected coin.</desc>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="#101410"/>
+  <rect x="14" y="14" width="100" height="100" rx="24" stroke="#3B3328" stroke-width="2"/>
+  <path d="M35 42c8-8 19-12 31-12 13 0 24 4 32 13" stroke="#C9A96E" stroke-width="6" stroke-linecap="round"/>
+  <path d="M35 86c8 8 19 12 31 12 13 0 24-4 32-13" stroke="#C9A96E" stroke-width="6" stroke-linecap="round"/>
+  <path d="M41 64h47" stroke="#D8D1C0" stroke-width="6" stroke-linecap="round"/>
+  <path d="M74 48l20 16-20 16" stroke="#8EA78F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="93" cy="35" r="10" fill="#171B16" stroke="#8EA78F" stroke-width="3"/>
+  <path d="M89 35h8" stroke="#C9A96E" stroke-width="2.8" stroke-linecap="round"/>
+</svg>
