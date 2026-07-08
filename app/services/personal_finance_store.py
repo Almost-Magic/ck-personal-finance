@@ -36,6 +36,7 @@ if not APP_DSN:
         "dbname": os.environ.get("PF_POSTGRES_DB", "ck_personal_finance"),
     }
 APP_MODE = "postgres"
+POSTGRES_CONNECT_TIMEOUT_SECONDS = int(os.environ.get("PF_POSTGRES_CONNECT_TIMEOUT_SECONDS", "3"))
 VECTOR_DIMS = 1536
 USER_UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads" / "personal-finance" / "user-provided"
 MAX_USER_UPLOAD_BYTES = 25 * 1024 * 1024
@@ -294,8 +295,8 @@ def _pg_conn():
 
 def _connect_pg():
     if APP_DSN:
-        return psycopg.connect(APP_DSN, row_factory=dict_row)
-    return psycopg.connect(**APP_CONNINFO, row_factory=dict_row)
+        return psycopg.connect(APP_DSN, row_factory=dict_row, connect_timeout=POSTGRES_CONNECT_TIMEOUT_SECONDS)
+    return psycopg.connect(**APP_CONNINFO, row_factory=dict_row, connect_timeout=POSTGRES_CONNECT_TIMEOUT_SECONDS)
 
 
 def using_postgres() -> bool:

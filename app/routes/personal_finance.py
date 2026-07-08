@@ -124,8 +124,35 @@ def _matrix() -> list[dict[str, str]]:
 async def cockpit():
     """Return the local/internal CK Personal Finance delivery truth."""
 
-    init_personal_finance_store()
-    persistence = get_persistence_snapshot()
+    try:
+        init_personal_finance_store()
+        persistence = get_persistence_snapshot()
+        dependency_error = None
+    except Exception as exc:
+        persistence = {
+            "store": APP_MODE,
+            "postgres_first_required": True,
+            "postgres_runtime_state": "dependency_down",
+            "pgvector_contract": {
+                "extension": "vector",
+                "version": None,
+                "embedding_column": "unavailable_until_postgres_pgvector_is_reachable",
+                "rag_status": "dependency_down",
+            },
+            "profile": None,
+            "table_counts": {"finance_document_evidence": 0},
+            "savings_goals": [],
+            "debt_plans": [],
+            "latest_receipts": [],
+            "blocked_external_actions": [
+                "live_bank_connection",
+                "provider_or_model_send",
+                "regulated_financial_advice",
+                "external_write",
+            ],
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        dependency_error = str(exc)
     matrix = _matrix()
     done = sum(1 for row in matrix if row["status"] == "DONE")
     partial = sum(1 for row in matrix if row["status"] == "PARTIAL")
@@ -162,8 +189,9 @@ async def cockpit():
             "configured_path": "redacted_postgres_dsn" if using_postgres() else "postgres_unavailable",
             "store_kind": APP_MODE,
             "postgres_required_for_serious_runtime": True,
-            "postgres_truth": "pass_active_runtime" if using_postgres() else "dependency_down_no_sqlite_runtime",
+            "postgres_truth": "pass_active_runtime" if using_postgres() and not dependency_error else "dependency_down_no_sqlite_runtime",
             "pgvector_truth": persistence["pgvector_contract"],
+            "dependency_error": dependency_error,
         },
         "rag": {
             "needed_for_receipts_statements_documents": True,
@@ -200,7 +228,7 @@ async def actions():
             "source_system_write",
             "public_release_or_deploy",
         ],
-        "next_best_slice": "Approval-gated only: real bank/CDR/external receiver writes and live OpenRouter execution remain gated.",
+        "next_best_slice": "Review first: connect banks, send information, or use a live AI provider only after explicit approval.",
     }
 
 

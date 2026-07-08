@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CK Personal Finance local internal cockpit">
+    <meta name="description" content="CK Personal Finance private money cockpit">
     <title>CK Personal Finance</title>
     <link rel="icon" href="static/assets/favicon.svg" type="image/svg+xml">
     <style>
@@ -397,25 +397,25 @@
                     <img class="product-mark" src="static/assets/ck-personal-finance-mark.svg" alt="CK Personal Finance logo">
                     <div>
                         <h1>CK Personal Finance</h1>
-                        <div class="muted">Private local money cockpit</div>
+                        <div class="muted">Private money cockpit</div>
                     </div>
                 </div>
             </div>
-            <div class="rhythm" aria-label="Finance prompt and local rhythm">
+            <div class="rhythm" aria-label="Finance prompt and daily rhythm">
                 <div class="prompt-source" id="promptSource">Money note</div>
                 <p class="prompt" id="moneyPrompt">Loading the next useful money prompt...</p>
                 <div class="time-line">
                     <span id="datePart">-- ---</span>
                     <span id="dayPart">---</span>
                     <span id="timePart">--:--</span>
-                    <span id="weatherPart">Weather/status: checking local runtime</span>
+                    <span id="weatherPart">Weather/status: checking readiness</span>
                 </div>
             </div>
             <div class="seal-wrap">
                 <div>
                     <div class="meta">AMTL seal</div>
                     <strong>Clarity over cynicism</strong>
-                    <p class="muted">Proof, reports, and deeper visuals open only when asked.</p>
+                    <p class="muted">Evidence, reports, and deeper visuals open only when asked.</p>
                 </div>
                 <img class="seal" src="static/assets/amtl-seal.png" alt="AMTL clarity over cynicism seal">
             </div>
@@ -429,14 +429,14 @@
                     <div>
                         <div class="meta" id="breadcrumb">Overview</div>
                         <h2 id="screenTitle">Today</h2>
-                        <p class="muted" id="screenCopy">Loading the local money picture...</p>
+                        <p class="muted" id="screenCopy">Loading the private money picture...</p>
                     </div>
-                    <span class="status-pill" id="modePill">Local only</span>
+                    <span class="status-pill" id="modePill">Private only</span>
                 </section>
 
                 <div class="segments" id="topSegments" role="tablist" aria-label="Primary money sections"></div>
                 <div class="subtabs" id="subTabs" role="tablist" aria-label="Current section tabs"></div>
-                <section class="metrics" id="metricGrid" aria-label="Clickable local counts"></section>
+                <section class="metrics" id="metricGrid" aria-label="Clickable review counts"></section>
 
                 <section class="content-grid">
                     <div class="panel">
@@ -448,7 +448,7 @@
                         <div id="workList" class="row-list"></div>
                         <div class="quick-actions" id="actionBar"></div>
                         <div class="visual-shelf" id="visualShelf"></div>
-                        <div class="output" id="actionOutput">Choose a local action. Nothing leaves this machine.</div>
+                        <div class="output" id="actionOutput">Choose a private review action. Nothing is sent anywhere.</div>
                     </div>
                     <div class="panel">
                         <div>
@@ -474,8 +474,8 @@
                     <p id="nextAction">Loading...</p>
                 </section>
                 <section class="inspector-card hidden" id="adminProofCard">
-                    <div class="meta">Admin proof</div>
-                    <h2>Runtime truth</h2>
+                    <div class="meta">Admin evidence</div>
+                    <h2>Runtime status</h2>
                     <div class="admin-proof" id="adminProof"></div>
                 </section>
             </aside>
@@ -483,6 +483,50 @@
     </div>
 
     <script>
+        const visibleCopyReplacements = [
+            [/\bAMTL Calm Design\b/g, "AMTL design"],
+            [/\bMani 100\b/g, "readiness"],
+            [/\bMani\b/g, "reviewer"],
+            [/\bCodex\b/g, "Builder"],
+            [/\bworker window\b/gi, "build lane"],
+            [/\bworker\b/gi, "operator"],
+            [/\bbuild window\b/gi, "build lane"],
+            [/\blocal\/internal\b/gi, "private"],
+            [/\blocal_internal\b/gi, "private"],
+            [/\blocal-only\b/gi, "private"],
+            [/\bLocal internal\b/g, "Private"],
+            [/\blocal internal\b/gi, "private"],
+            [/\bLocal only\b/g, "Private"],
+            [/\blocal only\b/gi, "private"],
+            [/\bRAG\b/g, "Sources & Search"],
+            [/\bProof\b/g, "Evidence"],
+            [/\bproof\b/g, "evidence"],
+            [/\bTruth\b/g, "Status"],
+            [/\btruth\b/g, "status"],
+            [/\bcalm\b/gi, "focused"]
+        ];
+
+        function normaliseVisibleCopy(root = document.body) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode(node) {
+                    const parent = node.parentElement;
+                    if (!parent || ["SCRIPT", "STYLE", "TEXTAREA", "INPUT"].includes(parent.tagName)) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                    return /\S/.test(node.nodeValue || "") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                }
+            });
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            nodes.forEach((node) => {
+                let value = node.nodeValue;
+                visibleCopyReplacements.forEach(([pattern, replacement]) => {
+                    value = value.replace(pattern, replacement);
+                });
+                if (value !== node.nodeValue) node.nodeValue = value;
+            });
+        }
+
         const state = {
             cockpit: null,
             actions: null,
@@ -491,7 +535,7 @@
             drilldown: null,
             helperKey: "why",
             visual: null,
-            lastAction: "Choose a local action. Nothing leaves this machine."
+            lastAction: "Choose a private review action. Nothing is sent anywhere."
         };
         const API_BASE = location.hostname.toLowerCase() === "amtl" && location.pathname.startsWith("/sak/finance")
             ? "/sak/finance"
@@ -512,7 +556,7 @@
                 text: "A forgotten monthly subscription is rarely one bad decision; it is usually a missing review ritual. Find it once, then make the ritual lighter."
             },
             {
-                source: "Local finance prompt",
+                source: "Finance prompt",
                 text: "Open the evidence before the report. The calmer order is source, row, explanation, then action."
             },
             {
@@ -528,8 +572,8 @@
                 open: true,
                 question: "What needs attention today?",
                 tabs: [
-                    { id: "today", label: "Today", surface: "budget", title: "Today", copy: "Start with the money items that need care now: next bills, quiet risks, recent changes, and safe local actions." },
-                    { id: "changed", label: "What changed", surface: "local-notes", title: "What changed", copy: "A short change story instead of a long scroll of every proof row." },
+                    { id: "today", label: "Today", surface: "budget", title: "Today", copy: "Start with the money items that need care now: next bills, quiet risks, recent changes, and safe review actions." },
+                    { id: "changed", label: "What changed", surface: "local-notes", title: "What changed", copy: "A short change story instead of a long scroll of every evidence row." },
                     { id: "review-later", label: "Review later", surface: "reminders", title: "Review later", copy: "Park useful but non-urgent items so the app does not keep shouting." },
                     { id: "focus", label: "Focus mode", surface: "budget", title: "Focus mode", copy: "Only today's pulse, one next action, and the evidence link." }
                 ]
@@ -556,11 +600,11 @@
                 tabs: [
                     { id: "forecast", label: "Forecast", surface: "scenarios", title: "Forecast", copy: "Month-end, 30-day, bill pressure, and buffer forecasts with assumptions shown only when opened." },
                     { id: "run-rate", label: "Monthly run rate", surface: "budget", title: "Monthly run rate", copy: "Daily pace, category pace, and comfort-target drift without shame language." },
-                    { id: "scenarios", label: "Scenario planner", surface: "scenarios", title: "Scenario planner", copy: "Try a choice locally before taking any real-world action." },
+                    { id: "scenarios", label: "Scenario planner", surface: "scenarios", title: "Scenario planner", copy: "Try a choice privately before taking any real-world action." },
                     { id: "safe-to-spend", label: "Safe-to-spend", surface: "cashflow", title: "Safe-to-spend", copy: "A careful estimate, not an instruction or regulated advice." },
                     { id: "sinking-funds", label: "Sinking funds", surface: "goals", title: "Sinking funds", copy: "Turn annual costs into monthly set-aside rhythms." },
                     { id: "goals", label: "Goals", surface: "goals", title: "Goals", copy: "Comfort targets, future dates, and small repeated actions." },
-                    { id: "reminders", label: "Reminders", surface: "reminders", title: "Reminders", copy: "Local reminders for reviews, bills, refunds, trials, and notice periods." }
+                    { id: "reminders", label: "Reminders", surface: "reminders", title: "Reminders", copy: "Private reminders for reviews, bills, refunds, trials, and notice periods." }
                 ]
             },
             {
@@ -573,9 +617,9 @@
                     { id: "import", label: "Import", surface: "import-reconcile", title: "Import", copy: "Excel, CSV, PDF, receipt image, statement, and manual-note flows are mapped before anything is trusted." },
                     { id: "cancellation", label: "Cancellation finder", surface: "scenarios", title: "Cancellation finder", copy: "Find unsubscribe pages, platform-managed subscriptions, support scripts, and follow-up reminders." },
                     { id: "renewals", label: "Renewal centre", surface: "reminders", title: "Renewal centre", copy: "Annual renewals, notice periods, contracts, warranties, and return windows." },
-                    { id: "disputes", label: "Dispute pack", surface: "reports", title: "Dispute pack", copy: "Build local evidence packs for suspicious or incorrect charges without contacting anyone." },
+                    { id: "disputes", label: "Dispute pack", surface: "reports", title: "Dispute pack", copy: "Build private evidence packs for suspicious or incorrect charges without contacting anyone." },
                     { id: "money-memory", label: "Money memory", surface: "local-notes", title: "Money memory", copy: "Decision log, review-later queue, do-not-nag state, and important money events." },
-                    { id: "rules", label: "Money rules", surface: "local-notes", title: "Money rules", copy: "User-defined local rules for reminders, hiding, tone, forecast assumptions, and review rhythm." }
+                    { id: "rules", label: "Money rules", surface: "local-notes", title: "Money rules", copy: "User-defined rules for reminders, hiding, tone, forecast assumptions, and review rhythm." }
                 ]
             },
             {
@@ -584,7 +628,7 @@
                 open: false,
                 question: "Why does the app think this?",
                 tabs: [
-                    { id: "evidence-search", label: "Search", surface: "tax", title: "Evidence search", copy: "Search approved local documents and indexed NAS evidence with Postgres/pgvector." },
+                    { id: "evidence-search", label: "Sources & Search", surface: "tax", title: "Evidence search", copy: "Search approved documents and indexed source evidence." },
                     { id: "receipt-matcher", label: "Receipt matcher", surface: "tax", title: "Receipt matcher", copy: "Link receipts, invoices, PDFs, and imported rows to money objects." },
                     { id: "evidence-gaps", label: "Evidence gaps", surface: "tax", title: "Evidence gaps", copy: "Show what needs one more source, not as blame but as confidence repair." },
                     { id: "tax-pack", label: "Tax evidence pack", surface: "tax", title: "Tax evidence pack", copy: "Evidence organisation only; not tax advice." },
@@ -597,9 +641,9 @@
                 open: false,
                 question: "Can I just ask?",
                 tabs: [
-                    { id: "ask-money", label: "Ask my money", surface: "budget", title: "Ask my money", copy: "A contextual money co-pilot that answers from local data and offers buttons that open real screens." },
+                    { id: "ask-money", label: "Ask my money", surface: "budget", title: "Ask my money", copy: "A contextual money co-pilot that answers from approved data and offers buttons that open real screens." },
                     { id: "explain-this", label: "Explain this", surface: "budget", title: "Explain this", copy: "Explain the selected row, amount, date, merchant, report, or action." },
-                    { id: "build-scenario", label: "Build scenario", surface: "scenarios", title: "Build scenario", copy: "Turn a chat question into a local scenario plan." },
+                    { id: "build-scenario", label: "Build scenario", surface: "scenarios", title: "Build scenario", copy: "Turn a chat question into a private scenario plan." },
                     { id: "find-evidence", label: "Find evidence", surface: "tax", title: "Find evidence", copy: "Ask for source-backed evidence without exposing raw documents unless approved." }
                 ]
             },
@@ -613,7 +657,7 @@
                     { id: "forecast-report", label: "Forecast report", surface: "reports", title: "Forecast report", copy: "Forecast summary, assumptions, pressure days, scenarios, and evidence." },
                     { id: "subscription-report", label: "Subscription report", surface: "reports", title: "Subscription report", copy: "Recurring payments, annual costs, review state, price changes, and cancellation status." },
                     { id: "renewals-report", label: "Bills and renewals", surface: "reports", title: "Bills and renewals", copy: "Bills, contracts, notice periods, and renewal timeline." },
-                    { id: "evidence-report", label: "Evidence report", surface: "reports", title: "Evidence report", copy: "Freshness, gaps, matched receipts, NAS sources, and proof links." },
+                    { id: "evidence-report", label: "Evidence report", surface: "reports", title: "Evidence report", copy: "Freshness, gaps, matched records, NAS sources, and evidence links." },
                     { id: "refunds-report", label: "Refunds and disputes", surface: "reports", title: "Refunds and disputes", copy: "Refund promises, dispute packets, waiting state, and follow-up dates." },
                     { id: "spending-change-report", label: "Spending change", surface: "reports", title: "Spending change", copy: "New merchants, changed categories, unusual charges, duplicate charges, and fees." },
                     { id: "data-quality-report", label: "Data quality", surface: "reports", title: "Data quality", copy: "What is fresh, what is missing, what is inferred, and what needs repair." }
@@ -625,8 +669,8 @@
                 open: false,
                 question: "Is the system healthy and proven?",
                 tabs: [
-                    { id: "proof", label: "Proof", surface: "admin", title: "Proof", copy: "Postgres, pgvector, Workshop, Beast, browser QA, audits, and local route truth." },
-                    { id: "privacy", label: "Privacy", surface: "admin", title: "Privacy", copy: "Local-only boundaries, provider gates, excluded NAS paths, and blocked external actions." },
+                    { id: "readiness", label: "Readiness", surface: "admin", title: "Readiness", copy: "Data store, source search, routes, browser checks, and review boundaries." },
+                    { id: "privacy", label: "Privacy", surface: "admin", title: "Privacy", copy: "Private boundaries, provider gates, excluded NAS paths, and blocked external actions." },
                     { id: "ai-routing", label: "AI routing", surface: "admin", title: "AI routing", copy: "OpenRouter free, modest, and full-expensive tiers selected by reasoning level." },
                     { id: "data-sources", label: "Data sources", surface: "admin", title: "Data sources", copy: "Postgres, pgvector, approved documents, NAS receipts, and import source state." },
                     { id: "delivery-matrix", label: "Delivery matrix", surface: "admin", title: "Delivery matrix", copy: "The implementation matrix lives here, not in the normal user screen." }
@@ -638,11 +682,11 @@
 
         const tabContent = {
             today: {
-                intro: "The first screen answers: what matters today, what changed, what is backed by evidence, and what can safely happen locally.",
+                intro: "The first screen answers: what matters today, what changed, what is backed by evidence, and what can safely happen next.",
                 rows: [
                     ["Today’s money pulse", "One calm sentence", "Review reminders, debt scenario, and evidence before deciding."],
                     ["Needs attention", "3 named rows", "Tax evidence review, credit card clean-down, and private health review."],
-                    ["Safe next step", "Review first", "Open exact rows, then create a local receipt if the decision should be remembered."]
+                    ["Safe next step", "Review first", "Open exact rows, then create an activity record if the decision should be remembered."]
                 ],
                 actions: ["openRows", "createReceipt", "searchEvidence"],
                 visuals: ["timeline", "evidenceChain"]
@@ -650,9 +694,9 @@
             changed: {
                 intro: "Change is presented as a short story, not a data dump.",
                 rows: [
-                    ["New evidence", "Source-backed", "NAS and approved source documents are searchable through local pgvector."],
+                    ["New evidence", "Source-backed", "NAS and approved source documents are searchable when opened."],
                     ["New tools", "Absorbed into UI", "Subscriptions, forecast, imports, cancellation support, money memory, and reports are now navigable surfaces."],
-                    ["Proof hidden", "Admin only", "Technical runtime truth moved behind Admin/Proof."]
+                    ["Evidence hidden", "Admin only", "Technical runtime status moved behind Admin readiness."]
                 ],
                 actions: ["openRows", "createReceipt", "showProof"],
                 visuals: ["trend", "evidenceChain"]
@@ -662,7 +706,7 @@
                 rows: [
                     ["Review later queue", "User control", "Save unclear subscriptions, renewals, missing receipts, and forecast assumptions."],
                     ["Do-not-nag state", "Respectful", "If Mani has decided, the app should remember and stop repeating the same prompt."],
-                    ["Follow-up reminder", "Local only", "Create a local reminder rather than relying on memory."]
+                    ["Follow-up reminder", "Private", "Create a review reminder rather than relying on memory."]
                 ],
                 actions: ["createReceipt", "openRows"],
                 visuals: ["timeline"]
@@ -670,7 +714,7 @@
             focus: {
                 intro: "Focus mode collapses the product to the one thing worth doing next.",
                 rows: [
-                    ["One prompt", "Attention protected", "No reports, charts, proof, or admin detail in the default view."],
+                    ["One prompt", "Attention protected", "No reports, charts, evidence logs, or admin detail in the default view."],
                     ["One action", "Calm loop", "Notice, explain, evidence, action, relief."],
                     ["One escape hatch", "User control", "Open details only when asked."]
                 ],
@@ -681,7 +725,7 @@
                 intro: "Transactions are treated as evidence-bearing rows, not anonymous lines.",
                 rows: [
                     ["Merchant decoder", "Field helper", "APPLE.COM/BILL, PAYPAL, STRIPE, Amazon, and square labels can be explained and remembered."],
-                    ["Receipt link", "Proof", "Every transaction can show receipt, statement, import, or missing-evidence state."],
+                    ["Receipt link", "Evidence", "Every transaction can show receipt, statement, import, or missing-evidence state."],
                     ["Unusual charge", "Worth checking", "The app says worth reviewing, never shameful wording."]
                 ],
                 actions: ["openRows", "searchEvidence", "createReceipt"],
@@ -692,7 +736,7 @@
                 rows: [
                     ["Bill calendar", "Click-to-open", "Upcoming bills, weekends, pressure days, and reminders."],
                     ["Notice period", "Field utility", "Cancel-by and review-by dates appear beside renewals."],
-                    ["Reminder builder", "Local", "Create local review reminders without contacting providers."]
+                    ["Reminder builder", "Private", "Create review reminders without contacting providers."]
                 ],
                 actions: ["uploadFile", "openRows", "createReceipt"],
                 visuals: ["timeline"]
@@ -712,7 +756,7 @@
                 rows: [
                     ["Refund tracker", "Waiting state", "Expected, overdue, received, or needs follow-up."],
                     ["Promise tracker", "Memory", "Reimbursements, support replies, and cancellation confirmations."],
-                    ["Follow-up script", "Copy-ready", "Prepare local text; no external send without approval."]
+                    ["Follow-up script", "Copy-ready", "Prepare text for review; no external send without approval."]
                 ],
                 actions: ["createReceipt", "openRows"],
                 visuals: ["timeline"]
@@ -738,7 +782,7 @@
                 visuals: ["evidenceChain"]
             },
             forecast: {
-                intro: "Forecasts are humble: based on known local evidence, with assumptions visible only when opened.",
+                intro: "Forecasts are humble: based on known evidence, with assumptions visible only when opened.",
                 rows: [
                     ["Month-end forecast", "Estimate", "Expected income, bills, variable spend, and projected leftover."],
                     ["Bill pressure", "Timing", "Shows the lowest expected buffer day and why."],
@@ -760,7 +804,7 @@
             scenarios: {
                 intro: "Scenarios show impact before commitment; they do not make real-world changes.",
                 rows: [
-                    ["Can I do this?", "Local what-if", "Try purchase, cancellation, bill timing, refund delay, or income change."],
+                    ["Can I do this?", "Private what-if", "Try purchase, cancellation, bill timing, refund delay, or income change."],
                     ["Compare choices", "Before/after", "Buy now vs wait; keep vs cancel; pay now vs next week."],
                     ["Decision log", "Memory", "Save why the user chose something and when to review it."]
                 ],
@@ -798,7 +842,7 @@
                 visuals: ["trend"]
             },
             reminders: {
-                intro: "Reminders are local, calm, and user-controlled.",
+                intro: "Reminders are private, calm, and user-controlled.",
                 rows: [
                     ["Bill reminders", "Due dates", "Lead days and cadence are visible."],
                     ["Trial and renewal watch", "Timing", "Remind before conversion, renewal, or notice deadline."],
@@ -872,7 +916,7 @@
                 rows: [
                     ["Tone", "Calm/direct/detailed", "The same insight can be shorter, clearer, or fuller."],
                     ["Alert intensity", "Only useful", "Urgent only, important and useful, or everything."],
-                    ["Local rules", "Personal", "Always remind before bills over a threshold; hide selected categories; exclude bonuses from default forecast."]
+                    ["Review rules", "Personal", "Always remind before bills over a threshold; hide selected categories; exclude bonuses from default forecast."]
                 ],
                 actions: ["createReceipt"],
                 visuals: ["comparison"]
@@ -880,7 +924,7 @@
             "evidence-search": {
                 intro: "Evidence search is the trust layer behind money claims.",
                 rows: [
-                    ["pgvector search", "Local", "Search approved docs and NAS chunks without SQLite fallback."],
+                    ["Source search", "Private", "Search approved docs and NAS chunks without exposing raw files by default."],
                     ["Source freshness", "Trust", "Fresh today, old, missing, or needs one more source."],
                     ["Evidence comfort", "Plain labels", "Looks good, needs one more source, source not found yet."]
                 ],
@@ -888,7 +932,7 @@
                 visuals: ["evidenceChain"]
             },
             "receipt-matcher": {
-                intro: "Receipt matcher links proof to money rows.",
+                intro: "Receipt matcher links evidence to money rows.",
                 rows: [
                     ["Match receipt", "Confirm", "Transaction to invoice, PDF, image, or statement row."],
                     ["Wrong match", "Control", "The user can reject bad evidence."],
@@ -908,7 +952,7 @@
                 visuals: ["comparison"]
             },
             "tax-pack": {
-                intro: "Tax evidence pack organises proof only. It is not tax advice.",
+                intro: "Tax evidence pack organises evidence only. It is not tax advice.",
                 rows: [
                     ["Possible evidence", "Review", "Work software, subscriptions, invoices, receipts, and notes."],
                     ["Mask sensitive fields", "Safe export", "Exports should show what is included and excluded."],
@@ -918,11 +962,11 @@
                 visuals: ["evidenceChain"]
             },
             "nas-sources": {
-                intro: "NAS indexing is explicit, bounded, and proof-backed.",
+                intro: "NAS indexing is explicit, bounded, and evidence-backed.",
                 rows: [
-                    ["Approved roots", "Local", "\\\\NAS2\\amtl-documents and \\\\NAS1\\Nas."],
+                    ["Approved roots", "Private", "\\\\NAS2\\amtl-documents and \\\\NAS1\\Nas."],
                     ["Excluded paths", "Strict", "Only the two user-named prefixes are excluded."],
-                    ["Receipt", "Proof", "Indexing writes a local receipt with scanned, indexed, skipped, and blocked counts."]
+                    ["Record", "Evidence", "Indexing writes an activity record with scanned, indexed, skipped, and blocked counts."]
                 ],
                 actions: ["indexNas", "searchEvidence", "showProof"],
                 visuals: ["evidenceChain"]
@@ -948,10 +992,10 @@
                 visuals: ["comparison"]
             },
             "build-scenario": {
-                intro: "Chat can draft a local scenario and open the scenario planner.",
+                intro: "Chat can draft a private scenario and open the scenario planner.",
                 rows: [
                     ["Question", "Input", "What happens if I spend 350 this week?"],
-                    ["Output", "Local", "Before/after buffer and assumptions."],
+                    ["Output", "Private", "Before/after buffer and assumptions."],
                     ["Receipt", "Memory", "Save only if the user asks."]
                 ],
                 actions: ["routeAi", "createReceipt", "openRows"],
@@ -960,7 +1004,7 @@
             "find-evidence": {
                 intro: "Chat can search evidence and return source-backed snippets.",
                 rows: [
-                    ["Search", "Local", "Runs pgvector over approved evidence."],
+                    ["Search", "Private", "Searches approved evidence."],
                     ["Summarise", "Gated", "OpenRouter is route-only unless explicitly executed and approved."],
                     ["Open rows", "Control", "The user can inspect the exact sources."]
                 ],
@@ -971,8 +1015,8 @@
                 intro: "Reports stay in the left menu; visuals open by button.",
                 rows: [
                     ["What happened", "Story", "Month summary, change drivers, bills, subscriptions, evidence gaps."],
-                    ["Next month", "Useful", "Review queue and local reminders."],
-                    ["Export", "Local", "PDF/DOCX later; current runtime creates local report receipts."]
+                    ["Next month", "Useful", "Review queue and private reminders."],
+                    ["Export", "Private", "PDF/DOCX later; current runtime creates report records."]
                 ],
                 actions: ["createReport", "openRows"],
                 visuals: ["timeline", "trend", "evidenceChain"]
@@ -1002,7 +1046,7 @@
                 rows: [
                     ["Calendar", "Upcoming", "Bills, contracts, notice periods, and renewals."],
                     ["Pressure days", "Forecast", "Where bills cluster."],
-                    ["Actions", "Local", "Create reminders and save review receipts."]
+                    ["Actions", "Private", "Create reminders and save review records."]
                 ],
                 actions: ["createReport", "createReceipt"],
                 visuals: ["timeline"]
@@ -1011,7 +1055,7 @@
                 intro: "Evidence report is for trust and repair.",
                 rows: [
                     ["Freshness", "Trust", "What is current, old, missing, or inferred."],
-                    ["Matched", "Proof", "Receipt and source coverage."],
+                    ["Matched", "Evidence", "Receipt and source coverage."],
                     ["NAS", "Boundary", "Approved roots and excluded paths."]
                 ],
                 actions: ["createReport", "searchEvidence", "indexNas"],
@@ -1022,7 +1066,7 @@
                 rows: [
                     ["Waiting", "Timeline", "Refunds, reimbursements, support replies, and cancellation confirmations."],
                     ["Overdue", "Calm", "Worth checking, not panic."],
-                    ["Packet", "Proof", "Export evidence pack locally."]
+                    ["Packet", "Evidence", "Export an evidence pack for review."]
                 ],
                 actions: ["createReport", "createReceipt"],
                 visuals: ["timeline"]
@@ -1047,12 +1091,12 @@
                 actions: ["createReport", "showProof"],
                 visuals: ["comparison"]
             },
-            proof: {
-                intro: "Technical proof stays behind Admin.",
+            readiness: {
+                intro: "Technical evidence stays behind Admin.",
                 rows: [
                     ["Postgres", "Required", "SQLite is not a CK Personal Finance DONE path."],
                     ["pgvector", "Active", "finance_document_evidence.embedding vector search."],
-                    ["Workshop and Beast", "Registered", "Port and friendly route truth proved."]
+                    ["Workshop and Beast", "Registered", "Port and friendly route status checked."]
                 ],
                 actions: ["runAudit", "showProof"],
                 visuals: ["evidenceChain"]
@@ -1060,7 +1104,7 @@
             privacy: {
                 intro: "Privacy states what the product will and will not do.",
                 rows: [
-                    ["Local only", "Default", "No bank API, no payment, no external write."],
+                    ["Private only", "Default", "No bank API, no payment, no external write."],
                     ["AI provider", "OpenRouter", "Route-only by default; execution needs key and approval flags."],
                     ["External blockers", "Honest", "Bank/CDR, source/customer writes, regulated advice, deploy/push/public release."]
                 ],
@@ -1081,17 +1125,17 @@
                 intro: "Data sources describe what feeds the app.",
                 rows: [
                     ["Postgres", "Runtime", "Active serious data path."],
-                    ["Approved docs", "RAG", "Product docs and evidence indexed locally."],
+                    ["Approved docs", "Sources", "Product docs and evidence are indexed for search."],
                     ["NAS", "Approved", "Only user-approved roots and exclusions."]
                 ],
                 actions: ["indexNas", "searchEvidence", "showProof"],
                 visuals: ["evidenceChain"]
             },
             "delivery-matrix": {
-                intro: "The matrix is proof for operators, not normal-user content.",
+                intro: "The matrix is evidence for operators, not normal-user content.",
                 rows: [
-                    ["Local/internal", "Done", "Safe rows implemented and proved."],
-                    ["Beyond local safe paths", "Done", "Approved NAS and OpenRouter free live proof recorded."],
+                    ["Private workspace", "Done", "Safe rows implemented and checked."],
+                    ["Beyond private safe paths", "Done", "Approved sources and provider-readiness checks recorded."],
                     ["True blockers", "External", "Need targets, credentials, contracts, or approval."]
                 ],
                 actions: ["runAudit", "showProof"],
@@ -1105,11 +1149,11 @@
             uploadFile: { label: "Upload CSV/PDF", run: uploadCsvPdf },
             searchEvidence: { label: "Search evidence", run: searchEvidence },
             indexNas: { label: "Index NAS sources", run: indexNasSources },
-            createReport: { label: "Create local report", run: createReport },
+            createReport: { label: "Create review report", run: createReport },
             routeAi: { label: "Route AI task", run: routeAiTask },
             runAudit: { label: "Run audit loop", run: runAudit },
-            copyPrivacy: { label: "Copy privacy receipt", run: copyPrivacy },
-            showProof: { label: "Show proof", run: () => selectTab("admin", "proof") }
+            copyPrivacy: { label: "Copy privacy note", run: copyPrivacy },
+            showProof: { label: "Show readiness", run: () => selectTab("admin", "readiness") }
         };
 
         const visualLabels = {
@@ -1123,7 +1167,7 @@
         const helperText = {
             why: {
                 label: "Why this matters",
-                default: "This panel turns the selected thing into one reason, one proof path, and one next safe action."
+                default: "This panel turns the selected thing into one reason, one evidence path, and one next safe action."
             },
             evidence: {
                 label: "Evidence",
@@ -1131,7 +1175,7 @@
             },
             next: {
                 label: "Next action",
-                default: "Open exact rows first. Then create a local receipt, reminder, report, search, or scenario if it helps."
+                default: "Open exact rows first. Then create an activity record, reminder, report, search, or scenario if it helps."
             },
             safety: {
                 label: "Safety",
@@ -1213,8 +1257,8 @@
             state.cockpit = cockpit;
             state.actions = actions;
             document.getElementById("weatherPart").textContent = cockpit.claim.done_local_internal
-                ? "Weather/status: local runtime healthy"
-                : "Weather/status: local runtime needs proof";
+                ? "Weather/status: private workspace ready"
+                : "Weather/status: readiness check needed";
             const wisdom = nextPrompt(cockpit);
             document.getElementById("promptSource").textContent = wisdom.source;
             document.getElementById("moneyPrompt").textContent = wisdom.text;
@@ -1259,6 +1303,7 @@
             renderVisual();
             renderHelper();
             renderAdmin();
+            normaliseVisibleCopy();
         }
 
         function renderHeader() {
@@ -1267,7 +1312,7 @@
             document.getElementById("breadcrumb").textContent = section.label;
             document.getElementById("screenTitle").textContent = tab.title;
             document.getElementById("screenCopy").textContent = tab.copy;
-            document.getElementById("modePill").textContent = state.cockpit?.claim.done_local_internal ? "Local internal ready" : "Local proof running";
+            document.getElementById("modePill").textContent = state.cockpit?.claim.done_local_internal ? "Private ready" : "Evidence check running";
             document.getElementById("adminProofCard").classList.toggle("hidden", state.section !== "admin");
         }
 
@@ -1361,8 +1406,8 @@
             const bodies = {
                 timeline: `<div class="timeline"><div><strong>Today</strong><br>Review pulse</div><div><strong>Next bill</strong><br>Reminder ready</div><div><strong>Pressure day</strong><br>Scenario available</div><div><strong>Review</strong><br>Report when asked</div></div>`,
                 trend: `<div class="mini-grid"><div class="mini-card"><strong>Run rate</strong><div class="bar" style="--bar: 62%"></div><p class="muted">Pace is shown as a comfort check.</p></div><div class="mini-card"><strong>Change</strong><div class="bar" style="--bar: 44%"></div><p class="muted">Open rows before deciding.</p></div></div>`,
-                comparison: `<div class="mini-grid"><div class="mini-card"><strong>Before</strong><p class="muted">Known bills, current pace, current buffer.</p></div><div class="mini-card"><strong>After</strong><p class="muted">Local scenario result only; no external action.</p></div></div>`,
-                evidenceChain: `<div class="timeline"><div><strong>Row</strong><br>Named item</div><div><strong>Source</strong><br>Receipt/import</div><div><strong>Evidence</strong><br>pgvector search</div><div><strong>Receipt</strong><br>Local proof</div></div>`,
+                comparison: `<div class="mini-grid"><div class="mini-card"><strong>Before</strong><p class="muted">Known bills, current pace, current buffer.</p></div><div class="mini-card"><strong>After</strong><p class="muted">Private scenario result only; no external action.</p></div></div>`,
+                evidenceChain: `<div class="timeline"><div><strong>Row</strong><br>Named item</div><div><strong>Source</strong><br>Receipt/import</div><div><strong>Evidence</strong><br>Source search</div><div><strong>Record</strong><br>Private evidence</div></div>`,
                 annualCost: `<div class="mini-grid"><div class="mini-card"><strong>Monthly</strong><p class="muted">Recurring amount and next likely charge.</p></div><div class="mini-card"><strong>Annualised</strong><p class="muted">Yearly impact shown gently.</p></div></div>`
             };
             shelf.innerHTML = `<div class="meta">Opened visual</div><h3>${escapeHtml(title)}</h3>${bodies[state.visual] || ""}`;
@@ -1394,7 +1439,7 @@
                 </details>
                 <details>
                     <summary>Safe boundary</summary>
-                    <p class="muted">The app can create local receipts, search evidence, route AI, and prepare reports. It cannot silently cancel, pay, connect banks, send externally, or give regulated advice.</p>
+                    <p class="muted">The app can create activity records, search evidence, route approved AI tasks, and prepare reports. It cannot silently cancel, pay, connect banks, send externally, or give regulated advice.</p>
                 </details>
             `;
         }
@@ -1402,10 +1447,10 @@
         function renderAdmin() {
             const c = state.cockpit;
             const rows = [
-                ["Claim", c.claim.done_local_internal ? "DONE_LOCAL_INTERNAL allowed for local/internal scope" : c.claim.reason],
+                ["Claim", c.claim.done_local_internal ? "Private workspace ready" : c.claim.reason],
                 ["Database", `${c.database.store_kind}; ${c.database.postgres_truth}`],
                 ["pgvector", `${c.database.pgvector_truth.version}; ${c.database.pgvector_truth.embedding_column}`],
-                ["RAG", `${c.rag.truth}; chunks ${c.persistence.table_counts.finance_document_evidence}`],
+                ["Sources & Search", `${c.rag.truth}; chunks ${c.persistence.table_counts.finance_document_evidence}`],
                 ["OpenRouter", `${c.ai_provider.default_execution}; key configured ${c.ai_provider.key_configured}`],
                 ["500 idea absorption", "Implemented as field utilities, grouped navigation, tabs, click-open visuals, contextual helper, reports, tools, and user controls."],
                 ["External writes", "Disabled"],
@@ -1426,7 +1471,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ decision_type: `ui_${state.tab}`, context: `UI action from ${currentSection().label} / ${currentTab().label}` })
             }).then((response) => response.json());
-            setOutput(`Receipt ${receipt.receipt_id} created locally. ${receipt.boundary}`);
+            setOutput(`Activity record ${receipt.receipt_id} created. ${receipt.boundary}`);
             await load();
         }
 
@@ -1444,7 +1489,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ report_type: state.tab })
             }).then((response) => response.json());
-            setOutput(`Report export ${report.export_id} created locally. External send state: ${report.external_send_state}.`);
+            setOutput(`Report export ${report.export_id} created. External send state: ${report.external_send_state}.`);
             await load();
         }
 
@@ -1458,7 +1503,7 @@
 
                 const form = new FormData();
                 form.append("file", file);
-                setOutput(`Uploading ${file.name} locally. Nothing leaves this machine.`);
+                setOutput(`Uploading ${file.name} for private review. Nothing is sent anywhere.`);
 
                 const response = await fetch(apiUrl("/api/personal-finance/uploads"), {
                     method: "POST",
@@ -1466,11 +1511,11 @@
                 });
                 const data = await response.json();
                 if (!response.ok) {
-                    setOutput(`Upload blocked: ${data.detail || "Only CSV and PDF local evidence is accepted."}`);
+                    setOutput(`Upload blocked: ${data.detail || "Only CSV and PDF evidence is accepted."}`);
                     return;
                 }
 
-                setOutput(`Upload receipt ${data.receipt_id}: ${data.original_filename} saved locally, indexed ${data.indexed_chunks} chunks. External send: ${data.external_send}.`);
+                setOutput(`Upload record ${data.receipt_id}: ${data.original_filename} saved for review, indexed ${data.indexed_chunks} chunks. External send: ${data.external_send}.`);
                 await load();
             }, { once: true });
             input.click();
@@ -1503,7 +1548,7 @@
         }
 
         async function copyPrivacy() {
-            const text = "CK Personal Finance local/internal: no regulated financial advice, no bank API, OpenRouter only behind explicit approval, no external write.";
+            const text = "CK Personal Finance private workspace: no regulated financial advice, no bank API, approved provider use only, no external write.";
             await navigator.clipboard.writeText(text).catch(() => {});
             setOutput(text);
         }
@@ -1527,10 +1572,13 @@
         renderTopSegments();
         renderSubTabs();
         renderHelper();
+        normaliseVisibleCopy();
+        new MutationObserver(() => normaliseVisibleCopy()).observe(document.body, { childList: true, subtree: true, characterData: true });
 
         load().catch((error) => {
             document.getElementById("weatherPart").textContent = "Weather/status: runtime error";
             document.getElementById("actionOutput").textContent = `Runtime load failed: ${error}`;
+            normaliseVisibleCopy();
         });
     </script>
 </body>
