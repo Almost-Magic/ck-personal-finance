@@ -733,7 +733,7 @@
                 visuals: ["evidenceChain"]
             },
             transactions: {
-                intro: "Transactions are treated as evidence-bearing rows, not anonymous lines.",
+                intro: "Browse the included synthetic transactions. Bank import and reconciliation are not implemented.",
                 rows: [
                     ["Merchant decoder", "Field helper", "APPLE.COM/BILL, PAYPAL, STRIPE, Amazon, and square labels can be explained and remembered."],
                     ["Receipt link", "Evidence", "Every transaction can show receipt, statement, import, or missing-evidence state."],
@@ -1364,7 +1364,7 @@
             const content = currentContent();
             document.getElementById("activeTabLabel").textContent = currentTab().label;
             document.getElementById("workTitle").textContent = currentTab().title;
-            const implemented = ["today", "accounts", "goals", "debt", "reminders", "scenarios", "evidence-search", "uploads", "monthly-story", "ai-routing"];
+            const implemented = ["today", "accounts", "transactions", "goals", "debt", "reminders", "scenarios", "evidence-search", "uploads", "monthly-story", "ai-routing"];
             document.getElementById("workIntro").textContent = (implemented.includes(state.tab) ? "" : "Preview: this tab describes a planned workflow. ") + content.intro;
             document.getElementById("workList").innerHTML = content.rows.slice(0, 1).map(([title, status, text]) => `
                 <article class="row-panel">
@@ -1382,6 +1382,7 @@
             const list = [];
             if (rows.uploads && state.section === "evidence") rows.uploads.forEach((row) => list.push(["Upload receipt", `Record ${row.id}: ${row.original_filename} - ${row.indexed_chunks} indexed chunks (${row.created_at})`]));
             if (rows.receipts) rows.receipts.forEach((row) => list.push(["Activity record", `Record ${row.id}: ${row.context} (${row.created_at})`]));
+            if (rows.transactions) rows.transactions.forEach((row) => list.push(["Demo transaction", `${row.date}: ${row.description} - ${money(row.amount)} (${row.category})`]));
             if (rows.accounts) rows.accounts.forEach((row) => list.push(["Account", `${row.name}: ${money(row.current_balance)} - ${row.source_state}`]));
             if (rows.savings_goals) rows.savings_goals.forEach((row) => list.push(["Goal", `${row.name}: ${money(row.saved_amount)} saved of ${money(row.target_amount)}`]));
             if (rows.debt_plans) rows.debt_plans.forEach((row) => list.push(["Debt", `${row.name}: ${money(row.current_balance)} remaining, ${money(row.repayment_amount)} ${row.repayment_frequency}`]));

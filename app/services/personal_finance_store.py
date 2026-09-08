@@ -860,10 +860,15 @@ def get_drilldown(surface: str) -> dict[str, Any]:
         reports = [dict(row) for row in conn.execute("SELECT id, report_type, title, payload, source_refs, external_send_state FROM report_exports ORDER BY id DESC LIMIT 5").fetchall()]
         uploads = [dict(row) for row in conn.execute("SELECT id, original_filename, indexed_chunks, created_at FROM user_upload_receipts ORDER BY id DESC LIMIT 20").fetchall()]
         helpers = [dict(row) for row in conn.execute("SELECT surface, field_name, helper_type, helper_text, micro_action, admin_only FROM field_helpers WHERE surface = %s OR surface = 'admin' ORDER BY admin_only, field_name", (surface,)).fetchall()]
-    groups = {"receipts": snapshot["latest_receipts"], "accounts": accounts, "savings_goals": snapshot["savings_goals"],
+    transactions = []
+    if DEMO_MODE:
+        import csv
+        with (Path(__file__).resolve().parents[2] / "demo" / "household.csv").open(newline="", encoding="utf-8-sig") as source:
+            transactions = [{**row, "amount": float(row["amount"])} for row in csv.DictReader(source)]
+    groups = {"transactions": transactions, "receipts": snapshot["latest_receipts"], "accounts": accounts, "savings_goals": snapshot["savings_goals"],
               "debt_plans": snapshot["debt_plans"], "reminders": reminders,
               "scenarios": scenarios, "reports": reports, "helpers": helpers, "uploads": uploads}
-    surface_groups = {"accounts": ["accounts"], "goals": ["savings_goals"], "debt": ["debt_plans"],
+    surface_groups = {"cashflow": ["transactions"], "accounts": ["accounts"], "goals": ["savings_goals"], "debt": ["debt_plans"],
                       "reminders": ["reminders"], "scenarios": ["scenarios"], "tax": ["uploads", "helpers"], "reports": list(groups)}
     named = {key: groups[key] for key in surface_groups.get(surface, list(groups))}
     return {
