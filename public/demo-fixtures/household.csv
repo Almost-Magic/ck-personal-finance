@@ -1,46 +1,46 @@
-date,description,amount,category,source
-2026-07-01,DEMO salary,6200.00,income,synthetic_demo
-2026-07-02,DEMO rent,-2100.00,housing,synthetic_demo
-2026-07-03,DEMO groceries,-170.00,groceries,synthetic_demo
-2026-07-05,DEMO train pass,-110.00,transport,synthetic_demo
-2026-07-07,DEMO electricity,-180.00,utilities,synthetic_demo
-2026-07-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
-2026-07-10,DEMO groceries,-185.00,groceries,synthetic_demo
-2026-07-14,DEMO insurance,-95.00,insurance,synthetic_demo
-2026-07-17,DEMO groceries,-160.00,groceries,synthetic_demo
-2026-07-19,DEMO train pass,-110.00,transport,synthetic_demo
-2026-07-21,DEMO refund,45.00,refund,synthetic_demo
-2026-07-24,DEMO groceries,-165.00,groceries,synthetic_demo
-2026-07-26,DEMO internet,-79.00,utilities,synthetic_demo
-2026-07-27,DEMO cafe,-36.00,dining,synthetic_demo
-2026-07-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
-2026-08-01,DEMO salary,6200.00,income,synthetic_demo
-2026-08-02,DEMO rent,-2100.00,housing,synthetic_demo
-2026-08-03,DEMO groceries,-170.00,groceries,synthetic_demo
-2026-08-05,DEMO train pass,-110.00,transport,synthetic_demo
-2026-08-07,DEMO electricity,-180.00,utilities,synthetic_demo
-2026-08-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
-2026-08-10,DEMO groceries,-185.00,groceries,synthetic_demo
-2026-08-14,DEMO insurance,-95.00,insurance,synthetic_demo
-2026-08-17,DEMO groceries,-160.00,groceries,synthetic_demo
-2026-08-19,DEMO train pass,-110.00,transport,synthetic_demo
-2026-08-21,DEMO refund,45.00,refund,synthetic_demo
-2026-08-24,DEMO groceries,-165.00,groceries,synthetic_demo
-2026-08-26,DEMO internet,-79.00,utilities,synthetic_demo
-2026-08-27,DEMO cafe,-36.00,dining,synthetic_demo
-2026-08-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
-2026-09-01,DEMO salary,6200.00,income,synthetic_demo
-2026-09-02,DEMO rent,-2100.00,housing,synthetic_demo
-2026-09-03,DEMO groceries,-170.00,groceries,synthetic_demo
-2026-09-05,DEMO train pass,-110.00,transport,synthetic_demo
-2026-09-07,DEMO electricity,-180.00,utilities,synthetic_demo
-2026-09-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
-2026-09-10,DEMO groceries,-185.00,groceries,synthetic_demo
-2026-09-14,DEMO insurance,-95.00,insurance,synthetic_demo
-2026-09-17,DEMO groceries,-160.00,groceries,synthetic_demo
-2026-09-19,DEMO train pass,-110.00,transport,synthetic_demo
-2026-09-21,DEMO refund,45.00,refund,synthetic_demo
-2026-09-24,DEMO groceries,-165.00,groceries,synthetic_demo
-2026-09-26,DEMO internet,-79.00,utilities,synthetic_demo
-2026-09-27,DEMO cafe,-36.00,dining,synthetic_demo
-2026-09-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
+date,description,amount,category,source
+2026-07-01,DEMO salary,6200.00,income,synthetic_demo
+2026-07-02,DEMO rent,-2100.00,housing,synthetic_demo
+2026-07-03,DEMO groceries,-170.00,groceries,synthetic_demo
+2026-07-05,DEMO train pass,-110.00,transport,synthetic_demo
+2026-07-07,DEMO electricity,-180.00,utilities,synthetic_demo
+2026-07-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
+2026-07-10,DEMO groceries,-185.00,groceries,synthetic_demo
+2026-07-14,DEMO insurance,-95.00,insurance,synthetic_demo
+2026-07-17,DEMO groceries,-160.00,groceries,synthetic_demo
+2026-07-19,DEMO train pass,-110.00,transport,synthetic_demo
+2026-07-21,DEMO refund,45.00,refund,synthetic_demo
+2026-07-24,DEMO groceries,-165.00,groceries,synthetic_demo
+2026-07-26,DEMO internet,-79.00,utilities,synthetic_demo
+2026-07-27,DEMO cafe,-36.00,dining,synthetic_demo
+2026-07-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
+2026-08-01,DEMO salary,6200.00,income,synthetic_demo
+2026-08-02,DEMO rent,-2100.00,housing,synthetic_demo
+2026-08-03,DEMO groceries,-170.00,groceries,synthetic_demo
+2026-08-05,DEMO train pass,-110.00,transport,synthetic_demo
+2026-08-07,DEMO electricity,-180.00,utilities,synthetic_demo
+2026-08-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
+2026-08-10,DEMO groceries,-185.00,groceries,synthetic_demo
+2026-08-14,DEMO insurance,-95.00,insurance,synthetic_demo
+2026-08-17,DEMO groceries,-160.00,groceries,synthetic_demo
+2026-08-19,DEMO train pass,-110.00,transport,synthetic_demo
+2026-08-21,DEMO refund,45.00,refund,synthetic_demo
+2026-08-24,DEMO groceries,-165.00,groceries,synthetic_demo
+2026-08-26,DEMO internet,-79.00,utilities,synthetic_demo
+2026-08-27,DEMO cafe,-36.00,dining,synthetic_demo
+2026-08-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
+2026-09-01,DEMO salary,6200.00,income,synthetic_demo
+2026-09-02,DEMO rent,-2100.00,housing,synthetic_demo
+2026-09-03,DEMO groceries,-170.00,groceries,synthetic_demo
+2026-09-05,DEMO train pass,-110.00,transport,synthetic_demo
+2026-09-07,DEMO electricity,-180.00,utilities,synthetic_demo
+2026-09-08,DEMO streaming,-22.00,subscriptions,synthetic_demo
+2026-09-10,DEMO groceries,-185.00,groceries,synthetic_demo
+2026-09-14,DEMO insurance,-95.00,insurance,synthetic_demo
+2026-09-17,DEMO groceries,-160.00,groceries,synthetic_demo
+2026-09-19,DEMO train pass,-110.00,transport,synthetic_demo
+2026-09-21,DEMO refund,45.00,refund,synthetic_demo
+2026-09-24,DEMO groceries,-165.00,groceries,synthetic_demo
+2026-09-26,DEMO internet,-79.00,utilities,synthetic_demo
+2026-09-27,DEMO cafe,-36.00,dining,synthetic_demo
+2026-09-28,DEMO card repayment,-220.00,debt_repayment,synthetic_demo
