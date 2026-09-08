@@ -278,7 +278,8 @@
             align-items: center;
             padding: 11px;
         }
-        .row-panel p { margin-bottom: 0; }
+        .row-panel > div { min-width: 0; }
+        .row-panel p { margin-bottom: 0; overflow-wrap: anywhere; }
         .mini-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1379,6 +1380,7 @@
         function renderDetails() {
             const rows = state.drilldown?.named_rows || {};
             const list = [];
+            if (rows.uploads && state.section === "evidence") rows.uploads.forEach((row) => list.push(["Upload receipt", `Record ${row.id}: ${row.original_filename} - ${row.indexed_chunks} indexed chunks (${row.created_at})`]));
             if (rows.receipts) rows.receipts.forEach((row) => list.push(["Activity record", `Record ${row.id}: ${row.context} (${row.created_at})`]));
             if (rows.accounts) rows.accounts.forEach((row) => list.push(["Account", `${row.name}: ${money(row.current_balance)} - ${row.source_state}`]));
             if (rows.savings_goals) rows.savings_goals.forEach((row) => list.push(["Goal", `${row.name}: ${money(row.saved_amount)} saved of ${money(row.target_amount)}`]));

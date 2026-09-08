@@ -757,6 +757,9 @@ def save_user_upload(file_obj: Any, filename: str, content_type: str | None = No
 
 def search_rag(query: str, limit: int = 5) -> dict[str, Any]:
     init_personal_finance_store()
+    query = query.strip()
+    if not query:
+        return {"mode": "postgres_pgvector", "query": query, "results": []}
     qvec = _vector(query)
     with _pg_conn() as conn:
         rows = conn.execute(
@@ -765,10 +768,16 @@ def search_rag(query: str, limit: int = 5) -> dict[str, Any]:
                    1 - (embedding <=> %s::vector) AS score
             FROM finance_document_evidence
             WHERE embedding IS NOT NULL
-            ORDER BY embedding <=> %s::vector
+              AND (strpos(lower(evidence_text), %s) > 0
+                   OR strpos(lower(title), %s) > 0
+                   OR 1 - (embedding <=> %s::vector) > 0)
+            ORDER BY (strpos(lower(evidence_text), %s) > 0
+                      OR strpos(lower(title), %s) > 0) DESC,
+                     embedding <=> %s::vector
             LIMIT %s
             """,
-            (_vector_literal(qvec), _vector_literal(qvec), limit),
+            (_vector_literal(qvec), query.lower(), query.lower(), _vector_literal(qvec),
+             query.lower(), query.lower(), _vector_literal(qvec), limit),
         ).fetchall()
         return {"mode": "postgres_pgvector", "query": query, "results": [dict(row) for row in rows]}
 
@@ -843,12 +852,13 @@ def get_drilldown(surface: str) -> dict[str, Any]:
         reminders = [dict(row) for row in conn.execute("SELECT title, due_date, status, source_ref FROM finance_reminders ORDER BY due_date LIMIT 10").fetchall()]
         scenarios = [dict(row) for row in conn.execute("SELECT name, scenario_type, inputs, outputs, boundary FROM scenario_plans ORDER BY id").fetchall()]
         reports = [dict(row) for row in conn.execute("SELECT id, report_type, title, payload, source_refs, external_send_state FROM report_exports ORDER BY id DESC LIMIT 5").fetchall()]
+        uploads = [dict(row) for row in conn.execute("SELECT id, original_filename, indexed_chunks, created_at FROM user_upload_receipts ORDER BY id DESC LIMIT 20").fetchall()]
         helpers = [dict(row) for row in conn.execute("SELECT surface, field_name, helper_type, helper_text, micro_action, admin_only FROM field_helpers WHERE surface = %s OR surface = 'admin' ORDER BY admin_only, field_name", (surface,)).fetchall()]
     groups = {"receipts": snapshot["latest_receipts"], "accounts": accounts, "savings_goals": snapshot["savings_goals"],
               "debt_plans": snapshot["debt_plans"], "reminders": reminders,
-              "scenarios": scenarios, "reports": reports, "helpers": helpers}
+              "scenarios": scenarios, "reports": reports, "helpers": helpers, "uploads": uploads}
     surface_groups = {"accounts": ["accounts"], "goals": ["savings_goals"], "debt": ["debt_plans"],
-                      "reminders": ["reminders"], "scenarios": ["scenarios"], "reports": list(groups)}
+                      "reminders": ["reminders"], "scenarios": ["scenarios"], "tax": ["uploads", "helpers"], "reports": list(groups)}
     named = {key: groups[key] for key in surface_groups.get(surface, list(groups))}
     return {
         "surface": surface,
