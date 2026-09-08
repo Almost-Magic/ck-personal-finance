@@ -128,11 +128,8 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
         "/api/personal-finance/uploads",
         files={"file": ("bill.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n", "application/pdf")},
     )
-    assert pdf_response.status_code == 200
-    pdf_data = pdf_response.json()
-    assert pdf_data["file_type"] == "user_uploaded_pdf"
-    assert pdf_data["external_send"] is False
-    Path(pdf_data["stored_path"]).unlink(missing_ok=True)
+    assert pdf_response.status_code == 400
+
 
     blocked = client.post(
         "/api/personal-finance/uploads",

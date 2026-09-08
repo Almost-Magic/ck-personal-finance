@@ -386,25 +386,27 @@ def _read_source_chunks(path: Path, max_chunks: int = 12) -> list[dict[str, str]
     if not path.exists() or not _safe_source(path):
         return []
     if path.suffix.lower() == ".pdf":
+        import subprocess
+        import sys
         try:
-            stat = path.stat()
-            return [{
-                "title": f"{path.name} metadata",
-                "source_path": str(path),
-                "text": f"PDF source available for CK Personal Finance evidence indexing. File: {path.name}. Size: {stat.st_size} bytes. Path: {path}",
-            }]
-        except OSError:
-            return []
-    text = path.read_text(encoding="utf-8", errors="ignore")
-    chunks = []
-    parts = [part.strip() for part in text.split("\n\n") if part.strip()]
-    for i, part in enumerate(parts[:max_chunks], start=1):
-        chunks.append({
-            "title": f"{path.name} chunk {i}",
-            "source_path": str(path),
-            "text": part[:3500],
-        })
-    return chunks
+            completed = subprocess.run([sys.executable, str(Path(__file__).with_name("pdf_text_worker.py")),
+                                        str(path), str(min(max_chunks * 3500, 84000))],
+                                       capture_output=True, text=True, timeout=12,
+                                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            result = json.loads(completed.stdout)
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
+            raise ValueError("PDF could not be read within the local processing limits.") from exc
+        if completed.returncode or "error" in result:
+            raise ValueError(result.get("error", "PDF processing failed."))
+        text = result["text"]
+    else:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    if not text.strip():
+        raise ValueError("File contains no readable evidence text.")
+    # Split by length so long CSVs do not silently lose everything after one paragraph.
+    return [{"title": f"{path.name} chunk {i // 3300 + 1}",
+             "source_path": str(path), "text": text[i:i + 3500]}
+            for i in range(0, min(len(text), max_chunks * 3300), 3300)]
 
 
 def _insert_evidence_chunks(conn: Any, profile_id: int, chunks: list[dict[str, str]], document_type: str) -> int:
@@ -658,7 +660,7 @@ def index_nas_sources(max_files: int = 120, max_chunks_per_file: int = 3) -> dic
                     continue
                 try:
                     chunks = _read_source_chunks(path, max_chunks=max_chunks_per_file)
-                except (OSError, UnicodeError):
+                except (OSError, UnicodeError, ValueError):
                     blocked += 1
                     continue
                 if not chunks:
@@ -749,7 +751,11 @@ def save_user_upload(file_obj: Any, filename: str, content_type: str | None = No
     if size == 0:
         destination.unlink(missing_ok=True)
         raise ValueError("Uploaded file was empty.")
-    result = index_user_upload(destination, filename, size)
+    try:
+        result = index_user_upload(destination, filename, size)
+    except ValueError:
+        destination.unlink(missing_ok=True)
+        raise
     result["content_type"] = content_type or "unknown"
     result["max_bytes"] = MAX_USER_UPLOAD_BYTES
     return result
