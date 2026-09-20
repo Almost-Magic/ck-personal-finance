@@ -348,18 +348,18 @@ async def ai_model_policy():
 async def ai_route(request: AiRouteRequest):
     route = select_openrouter_route(request.reasoning_level, request.max_cost_tier)
     return {
-        "provider": "openrouter",
+        "provider": None,
         "task_kind": request.task_kind,
         "route": route,
         "provider_called": False,
         "external_write": False,
-        "notes": "Route selection only; no model call was made.",
+        "notes": "External model providers are disabled by policy; no model call was made.",
     }
 
 
 @router.post("/ai/complete")
 async def ai_complete(request: AiCompleteRequest):
-    return await openrouter_complete(
+    blocked = await openrouter_complete(
         prompt=request.prompt,
         reasoning_level=request.reasoning_level,
         max_cost_tier=request.max_cost_tier,
@@ -367,6 +367,7 @@ async def ai_complete(request: AiCompleteRequest):
         allow_paid_provider=request.allow_paid_provider,
         system=request.system,
     )
+    raise HTTPException(status_code=403, detail=blocked)
 
 
 @router.post("/audit/{iteration}")

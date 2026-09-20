@@ -22,9 +22,9 @@ def test_personal_finance_cockpit_keeps_completion_honest():
     assert data["rag"]["truth"] == "indexed_and_searchable"
     assert data["privacy"]["regulated_financial_advice"] == "not_provided"
     assert data["privacy"]["bank_api_connection"] == "disabled_without_explicit_approval"
-    assert data["privacy"]["provider_or_model_send"] == "openrouter_only_gated_by_key_execute_and_paid_approval"
-    assert data["ai_provider"]["provider"] == "openrouter"
-    assert data["ai_provider"]["default_execution"] == "route_only_no_provider_call"
+    assert data["ai_provider"]["provider_call_allowed"] is False
+    assert data["ai_provider"]["provider"] is None
+    assert data["ai_provider"]["default_execution"] == "disabled_by_policy"
     assert data["database"]["postgres_required_for_serious_runtime"] is True
     assert data["persistence"]["table_counts"]["savings_goals"] >= 1
     assert data["persistence"]["table_counts"]["finance_reminders"] >= 1
@@ -70,30 +70,33 @@ def test_personal_finance_actions_are_local_and_blocked_where_needed():
     data = client.get("/api/personal-finance/actions").json()
 
     assert "copy_privacy_boundary_receipt" in data["safe_actions"]
-    assert "route_ai_task_through_openrouter_policy" in data["safe_actions"]
+    assert "route_ai_task_through_openrouter_policy" not in data["safe_actions"]
     assert "upload_user_csv_or_pdf_local_evidence" in data["safe_actions"]
     assert "live_bank_connection" in data["blocked_actions"]
     assert "regulated_financial_advice" in data["blocked_actions"]
     assert "public_release_or_deploy" in data["blocked_actions"]
 
 
-def test_personal_finance_openrouter_routing_is_cost_capped_and_secret_safe():
+def test_personal_finance_external_ai_is_disabled_before_network(monkeypatch):
     client = TestClient(app)
 
+    def fail_network(*args, **kwargs):
+        raise AssertionError("network client must not be constructed")
+
+    monkeypatch.setattr("socket.create_connection", fail_network)
     policy = client.get("/api/personal-finance/ai/model-policy").json()
-    assert policy["provider"] == "openrouter"
-    assert policy["tiers"]["free"]["label"] == "Free models first"
-    assert policy["tiers"]["modest"]["label"] == "A little bit expensive"
-    assert policy["tiers"]["expensive"]["label"] == "Full expensive models"
+    assert policy["provider"] is None
+    assert policy["provider_call_allowed"] is False
+    assert policy["default_execution"] == "disabled_by_policy"
     assert "OPENROUTER_API_KEY" not in str(policy)
 
     route = client.post(
         "/api/personal-finance/ai/route",
         json={"task_kind": "scenario_planner", "reasoning_level": "high", "max_cost_tier": "modest"},
-    ).json()
-    assert route["provider"] == "openrouter"
-    assert route["provider_called"] is False
-    assert route["route"]["tier"] == "modest"
+    )
+    assert route.status_code == 200
+    assert route.json()["provider"] is None
+    assert route.json()["provider_called"] is False
 
     completion = client.post(
         "/api/personal-finance/ai/complete",
@@ -101,14 +104,14 @@ def test_personal_finance_openrouter_routing_is_cost_capped_and_secret_safe():
             "prompt": "Explain a budget variance calmly.",
             "reasoning_level": "low",
             "max_cost_tier": "free",
-            "execute": False,
-            "allow_paid_provider": False,
+            "execute": True,
+            "allow_paid_provider": True,
         },
-    ).json()
-    assert completion["ok"] is True
-    assert completion["provider_called"] is False
-    assert completion["route"]["tier"] == "free"
-    assert completion["result"]["fallback"] is True
+    )
+    assert completion.status_code == 403
+    detail = completion.json()["detail"]
+    assert detail["state"] == "disabled_by_policy"
+    assert detail["provider_called"] is False
 
 
 def test_personal_finance_receipts_create_local_only_records():
