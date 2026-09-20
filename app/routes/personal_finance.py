@@ -21,7 +21,6 @@ from app.services.personal_finance_store import (
     create_report_export,
     get_drilldown,
     get_persistence_snapshot,
-    index_nas_sources,
     index_approved_rag_sources,
     save_user_upload,
     init_personal_finance_store,
@@ -61,11 +60,6 @@ class AiCompleteRequest(BaseModel):
     system: str | None = None
 
 
-class NasIndexRequest(BaseModel):
-    max_files: int = 120
-    max_chunks_per_file: int = 3
-
-
 SAFE_LOCAL_WORKFLOWS = [
     ("dashboard", "Dashboard", "DONE", "public/index.html", "Calm overview, user controls, privacy boundary, and live proof panels"),
     ("accounts", "Accounts", "DONE", "app/services/personal_finance_store.py", "Personal account groups persist with source state and drilldown rows"),
@@ -87,7 +81,6 @@ SAFE_LOCAL_WORKFLOWS = [
     ("local-notes", "Local notes and decisions", "DONE", "app/services/personal_finance_store.py", "Decision receipts persist without external write"),
     ("cross-app", "Cross-app handoffs", "DONE", "app/services/personal_finance_store.py", "Draft-only handoff records exist for AMTL apps; no receiver mutation"),
     ("admin-settings", "Admin and settings", "DONE", "app/routes/personal_finance.py", "Admin proof is behind Admin/Proof and includes DB/RAG/route truth"),
-    ("nas-source-indexing", "NAS source indexing", "DONE", "app/services/personal_finance_store.py", "Approved NAS roots index into Postgres/pgvector with only the two user-named path exclusions"),
     ("openrouter-live-route", "OpenRouter live route", "DONE", "app/services/openrouter_router.py", "OpenRouter is the only AI provider route; live execution is key/execute/paid-approval gated"),
     ("external-action-gates", "External action gates", "DONE", "app/routes/personal_finance.py", "Bank/source/write/deploy actions are explicit approval targets with receipts, not silent UI buttons"),
     ("user-csv-pdf-upload", "User CSV/PDF upload", "DONE", "app/routes/personal_finance.py", "Users can provide local CSV or PDF evidence; files are stored locally, indexed, and receipt-backed with external_send=false"),
@@ -240,7 +233,6 @@ async def beyond_local_status():
         "status": "BEYOND_LOCAL_IMPLEMENTED_WITH_TRUE_EXTERNAL_TARGET_BLOCKERS",
         "done": [
             "postgres_pgvector_runtime",
-            "approved_nas_source_indexing_endpoint",
             "openrouter_reasoning_cost_router",
             "report_export_receipts",
             "external_action_receipt_gates",
@@ -252,7 +244,7 @@ async def beyond_local_status():
             {
                 "item": "live_bank_cdr_connection",
                 "reason": "No bank/CDR credential, account target, consent artefact, rollback plan, or live smoke target is present in repo/runtime.",
-                "safe_repair_state": "Use local import/NAS evidence until an exact bank target is configured.",
+                "safe_repair_state": "Use reviewed local imports until an exact bank target is configured.",
             },
             {
                 "item": "source_customer_system_write",
@@ -311,11 +303,6 @@ async def reports(request: ReportRequest):
 @router.post("/rag/index")
 async def rag_index():
     return index_approved_rag_sources()
-
-
-@router.post("/sources/nas/index")
-async def nas_index(request: NasIndexRequest):
-    return index_nas_sources(request.max_files, request.max_chunks_per_file)
 
 
 @router.post("/uploads")

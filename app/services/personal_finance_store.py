@@ -129,20 +129,6 @@ CREATE TABLE IF NOT EXISTS finance_document_evidence (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS nas_source_index_receipts (
-    id BIGSERIAL PRIMARY KEY,
-    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    finished_at TIMESTAMPTZ,
-    roots JSONB NOT NULL DEFAULT '[]'::jsonb,
-    excluded_prefixes JSONB NOT NULL DEFAULT '[]'::jsonb,
-    scanned_files INTEGER NOT NULL DEFAULT 0,
-    indexed_chunks INTEGER NOT NULL DEFAULT 0,
-    skipped_files INTEGER NOT NULL DEFAULT 0,
-    blocked_files INTEGER NOT NULL DEFAULT 0,
-    limit_reached BOOLEAN NOT NULL DEFAULT FALSE,
-    notes TEXT NOT NULL DEFAULT ''
-);
-
 CREATE TABLE IF NOT EXISTS user_upload_receipts (
     id BIGSERIAL PRIMARY KEY,
     profile_id BIGINT NOT NULL REFERENCES personal_profiles(id) ON DELETE CASCADE,
@@ -231,7 +217,6 @@ TABLES = [
     "finance_decision_receipts",
     "import_rollback_receipts",
     "finance_document_evidence",
-    "nas_source_index_receipts",
     "user_upload_receipts",
     "finance_reminders",
     "scenario_plans",
@@ -263,31 +248,17 @@ WORKFLOW_IDS = [
     "local-notes",
     "cross-app",
     "admin-settings",
-    "nas-source-indexing",
     "openrouter-live-route",
     "external-action-gates",
     "user-csv-pdf-upload",
 ]
 
 
-APPROVED_RAG_SOURCES = [
-    Path("C:/Users/Mani/Downloads/CK-PERSONAL-FINANCE-COMPLETE-RECORD.md"),
-    Path("C:/Users/Mani/Downloads/SAK-PERSONAL-FINANCE-v2-ARTIFACT-REVISED-20260530.md"),
-    Path("C:/Users/Mani/Downloads/SAK-PERSONAL-FINANCE-MODULE-SPEC-v1.md"),
-    Path("C:/Users/Mani/Downloads/AMTL-FINANCE-SUITE-SPEC-260326.md"),
-    Path("C:/Users/Mani/AMTL-docs/AMTL-AGENT-CONTROL-CENTER/C1-CK-PERSONAL-FINANCE-LOCAL-INTERNAL-270626.md"),
-]
+def _configured_paths(name: str) -> list[Path]:
+    return [Path(value).expanduser() for value in os.environ.get(name, "").split(os.pathsep) if value.strip()]
 
 
-EXCLUDED_SOURCE_PREFIXES = [
-    "\\\\NAS2\\amtl-documents\\escalation-logs\\linux logs\\wazuz\\prefe".lower(),
-    "\\\\Nas1\\Nas\\Programs\\Spiritual\\Dr Joe Dispenza\\Generous moment\\mani".lower(),
-]
-
-NAS_SOURCE_ROOTS = [
-    Path("\\\\NAS2\\amtl-documents"),
-    Path("\\\\NAS1\\Nas"),
-]
+APPROVED_RAG_SOURCES = _configured_paths("PERSONAL_FINANCE_RAG_SOURCE_FILES")
 
 INDEXABLE_EXTENSIONS = {".md", ".txt", ".csv", ".json", ".log", ".html", ".htm", ".pdf"}
 USER_UPLOAD_EXTENSIONS = {".csv", ".pdf"}
@@ -349,36 +320,33 @@ def _executemany(conn: Any, query: str, rows: Iterable[tuple[Any, ...]]) -> None
         cursor.executemany(query, rows)
 
 
+def _canonical_path(path: Path) -> Path | None:
+    try:
+        return path.expanduser().resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+
+
+def _contained_by(path: Path, roots: list[Path]) -> bool:
+    for root in roots:
+        canonical_root = _canonical_path(root)
+        if canonical_root is not None and (path == canonical_root or canonical_root in path.parents):
+            return True
+    return False
+
+
 def _safe_source(path: Path) -> bool:
-    raw = str(path).lower()
-    return not any(raw.startswith(prefix) for prefix in EXCLUDED_SOURCE_PREFIXES)
+    canonical = _canonical_path(path)
+    if canonical is None or not canonical.is_file():
+        return False
+    return any(
+        canonical == configured for source in APPROVED_RAG_SOURCES if (configured := _canonical_path(source)) is not None
+    ) or _contained_by(canonical, [USER_UPLOAD_ROOT])
 
 
-def _iter_nas_files(root: Path, max_files: int) -> Iterable[Path]:
-    stack = [root]
-    yielded = 0
-    while stack and yielded < max_files:
-        current = stack.pop()
-        if not _safe_source(current):
-            continue
-        try:
-            with os.scandir(current) as entries:
-                for entry in entries:
-                    path = Path(entry.path)
-                    if not _safe_source(path):
-                        continue
-                    try:
-                        if entry.is_dir(follow_symlinks=False):
-                            stack.append(path)
-                        elif entry.is_file(follow_symlinks=False) and path.suffix.lower() in INDEXABLE_EXTENSIONS:
-                            yielded += 1
-                            yield path
-                            if yielded >= max_files:
-                                return
-                    except OSError:
-                        continue
-        except OSError:
-            continue
+def _source_id(path: Path) -> str:
+    canonical = _canonical_path(path)
+    return hashlib.sha256(str(canonical or path).encode("utf-8")).hexdigest()[:16]
 
 
 def _read_source_chunks(path: Path, max_chunks: int = 12) -> list[dict[str, str]]:
@@ -395,7 +363,7 @@ def _read_source_chunks(path: Path, max_chunks: int = 12) -> list[dict[str, str]
         for index, page in enumerate(reader.pages[:max_chunks], start=1):
             text = (page.extract_text() or "").strip()
             if text:
-                chunks.append({"title": f"{path.name} page {index}", "source_path": str(path), "text": text[:3500]})
+                chunks.append({"title": f"{path.name} page {index}", "source_path": f"source:{_source_id(path)}", "text": text[:3500]})
         if not chunks:
             raise ValueError("PDF contains no extractable text.")
         return chunks
@@ -406,7 +374,7 @@ def _read_source_chunks(path: Path, max_chunks: int = 12) -> list[dict[str, str]
     chunks = []
     parts = [part.strip() for part in text.split("\n\n") if part.strip()]
     for i, part in enumerate(parts[:max_chunks], start=1):
-        chunks.append({"title": f"{path.name} chunk {i}", "source_path": str(path), "text": part[:3500]})
+        chunks.append({"title": f"{path.name} chunk {i}", "source_path": f"source:{_source_id(path)}", "text": part[:3500]})
     return chunks
 
 
@@ -638,71 +606,6 @@ def index_approved_rag_sources(conn: Any | None = None, profile_id: int | None =
             conn.close()
 
 
-def index_nas_sources(max_files: int = 120, max_chunks_per_file: int = 3) -> dict[str, Any]:
-    init_personal_finance_store()
-    max_files = max(1, min(max_files, 1000))
-    max_chunks_per_file = max(1, min(max_chunks_per_file, 12))
-    scanned = 0
-    skipped = 0
-    blocked = 0
-    inserted = 0
-    roots = [str(root) for root in NAS_SOURCE_ROOTS]
-    with _pg_conn() as conn:
-        profile_id = _profile_id(conn)
-        receipt_id = conn.execute(
-            "INSERT INTO nas_source_index_receipts (roots, excluded_prefixes, notes) VALUES (%s, %s, %s) RETURNING id",
-            (
-                json.dumps(roots),
-                json.dumps(EXCLUDED_SOURCE_PREFIXES),
-                "NAS source indexing approved by Mani; only the two named prefixes are path-excluded.",
-            ),
-        ).fetchone()["id"]
-        for root in NAS_SOURCE_ROOTS:
-            if not root.exists():
-                blocked += 1
-                continue
-            for path in _iter_nas_files(root, max_files - scanned):
-                scanned += 1
-                if not _safe_source(path):
-                    skipped += 1
-                    continue
-                try:
-                    chunks = _read_source_chunks(path, max_chunks=max_chunks_per_file)
-                except (OSError, UnicodeError):
-                    blocked += 1
-                    continue
-                if not chunks:
-                    skipped += 1
-                    continue
-                inserted += _insert_evidence_chunks(conn, profile_id, chunks, "nas_source_doc")
-                if scanned >= max_files:
-                    break
-            if scanned >= max_files:
-                break
-        limit_reached = scanned >= max_files
-        conn.execute(
-            """
-            UPDATE nas_source_index_receipts
-            SET finished_at = now(), scanned_files = %s, indexed_chunks = %s,
-                skipped_files = %s, blocked_files = %s, limit_reached = %s
-            WHERE id = %s
-            """,
-            (scanned, inserted, skipped, blocked, limit_reached, receipt_id),
-        )
-    return {
-        "receipt_id": receipt_id,
-        "roots": roots,
-        "excluded_prefixes": EXCLUDED_SOURCE_PREFIXES,
-        "scanned_files": scanned,
-        "indexed_chunks": inserted,
-        "skipped_files": skipped,
-        "blocked_files": blocked,
-        "limit_reached": limit_reached,
-        "mode": "postgres_pgvector_nas_source_index",
-        "external_send": False,
-    }
-
-
 def index_user_upload(source_path: Path, original_filename: str, file_size_bytes: int) -> dict[str, Any]:
     init_personal_finance_store()
     suffix = source_path.suffix.lower()
@@ -720,12 +623,12 @@ def index_user_upload(source_path: Path, original_filename: str, file_size_bytes
                 (profile_id, original_filename, stored_path, file_type, file_size_bytes, indexed_chunks, external_send, boundary)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
             """,
-            (profile_id, original_filename, str(source_path), document_type, file_size_bytes, inserted, False, boundary),
+            (profile_id, original_filename, f"upload:{_source_id(source_path)}", document_type, file_size_bytes, inserted, False, boundary),
         ).fetchone()["id"]
     return {
         "receipt_id": receipt_id,
         "original_filename": original_filename,
-        "stored_path": str(source_path),
+        "source_id": f"upload:{_source_id(source_path)}",
         "file_type": document_type,
         "file_size_bytes": file_size_bytes,
         "indexed_chunks": inserted,
