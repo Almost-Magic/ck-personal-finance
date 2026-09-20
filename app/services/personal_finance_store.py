@@ -745,7 +745,7 @@ def save_user_upload(file_obj: Any, filename: str, content_type: str | None = No
     USER_UPLOAD_QUARANTINE.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     digest = hashlib.sha256(f"{safe_name}:{stamp}".encode("utf-8")).hexdigest()[:10]
-    quarantine = USER_UPLOAD_QUARANTINE / f"{stamp}-{digest}-{safe_name}.part"
+    quarantine = USER_UPLOAD_QUARANTINE / f"{stamp}-{digest}-{Path(safe_name).stem}.part{suffix}"
     destination = USER_UPLOAD_ROOT / f"{stamp}-{digest}-{safe_name}"
     size = 0
     try:
