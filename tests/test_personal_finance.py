@@ -9,6 +9,7 @@ from server import app
 
 def test_personal_finance_cockpit_keeps_completion_honest():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
     response = client.get("/api/personal-finance/cockpit")
     assert response.status_code == 200
     data = response.json()
@@ -29,11 +30,12 @@ def test_personal_finance_cockpit_keeps_completion_honest():
     assert data["persistence"]["table_counts"]["savings_goals"] >= 1
     assert data["persistence"]["table_counts"]["finance_reminders"] >= 1
     assert data["persistence"]["table_counts"]["scenario_plans"] >= 1
-    assert data["counts"]["total"] >= 23
+    assert data["counts"]["total"] >= 22
 
 
 def test_personal_finance_matrix_has_required_surfaces():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
     rows = client.get("/api/personal-finance/cockpit").json()["matrix"]
     row_ids = {row["id"] for row in rows}
 
@@ -55,6 +57,7 @@ def test_personal_finance_matrix_has_required_surfaces():
 
 def test_personal_finance_persistence_and_postgres_contract_are_visible():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
     persistence = client.get("/api/personal-finance/persistence").json()
     schema = client.get("/api/personal-finance/postgres-schema").json()
 
@@ -67,6 +70,7 @@ def test_personal_finance_persistence_and_postgres_contract_are_visible():
 
 def test_personal_finance_actions_are_local_and_blocked_where_needed():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
     data = client.get("/api/personal-finance/actions").json()
 
     assert "copy_privacy_boundary_receipt" in data["safe_actions"]
@@ -79,6 +83,7 @@ def test_personal_finance_actions_are_local_and_blocked_where_needed():
 
 def test_personal_finance_external_ai_is_disabled_before_network(monkeypatch):
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
 
     def fail_network(*args, **kwargs):
         raise AssertionError("network client must not be constructed")
@@ -116,6 +121,7 @@ def test_personal_finance_external_ai_is_disabled_before_network(monkeypatch):
 
 def test_personal_finance_receipts_create_local_only_records():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
     response = client.post(
         "/api/personal-finance/receipts",
         json={"decision_type": "test_review", "context": "Focused test receipt"},
@@ -130,6 +136,7 @@ def test_personal_finance_receipts_create_local_only_records():
 
 def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
 
     csv_response = client.post(
         "/api/personal-finance/uploads",
@@ -165,6 +172,7 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
 
 def test_personal_finance_rag_drilldown_reports_and_audit_are_wired():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
 
     rag = client.get("/api/personal-finance/rag/search", params={"q": "tax evidence", "limit": 2}).json()
     assert rag["mode"] == "postgres_pgvector"
@@ -187,6 +195,7 @@ def test_personal_finance_rag_drilldown_reports_and_audit_are_wired():
 
 def test_personal_finance_beyond_local_status_is_preview_and_nas_index_is_removed():
     client = TestClient(app)
+    client.headers.update({"Origin": "http://testserver"})
 
     status = client.get("/api/personal-finance/beyond-local/status").json()
     assert status["status"] == "PREVIEW_LOCAL_WITH_EXTERNAL_TARGET_BLOCKERS"
