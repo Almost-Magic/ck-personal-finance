@@ -15,8 +15,8 @@ def test_personal_finance_cockpit_keeps_completion_honest():
 
     assert data["product"] == "CK Personal Finance"
     assert data["database"]["store_kind"] == "postgres"
-    assert data["claim"]["done_local_internal"] is True
-    assert data["claim"]["mani_100_allowed"] is True
+    assert data["claim"]["preview_local_internal"] is True
+    assert data["claim"]["acceptance_evidence_complete"] is False
     assert data["database"]["postgres_truth"] == "pass_active_runtime"
     assert data["rag"]["configured"] is True
     assert data["rag"]["truth"] == "indexed_and_searchable"
@@ -49,7 +49,7 @@ def test_personal_finance_matrix_has_required_surfaces():
         "cross-app",
     }
     assert required.issubset(row_ids)
-    assert all(row["status"] == "DONE" for row in rows)
+    assert all(row["status"] == "PREVIEW" for row in rows)
     assert all(row["exact_next_fix"] for row in rows)
 
 
@@ -142,7 +142,8 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
     assert csv_data["external_send"] is False
     assert csv_data["indexed_chunks"] >= 1
     assert "no bank connection" in csv_data["boundary"].lower()
-    Path(csv_data["stored_path"]).unlink(missing_ok=True)
+    assert csv_data["source_id"].startswith("upload:")
+    assert "stored_path" not in csv_data
 
     pdf_response = client.post(
         "/api/personal-finance/uploads",
@@ -152,7 +153,8 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
     pdf_data = pdf_response.json()
     assert pdf_data["file_type"] == "user_uploaded_pdf"
     assert pdf_data["external_send"] is False
-    Path(pdf_data["stored_path"]).unlink(missing_ok=True)
+    assert pdf_data["source_id"].startswith("upload:")
+    assert "stored_path" not in pdf_data
 
     blocked = client.post(
         "/api/personal-finance/uploads",
@@ -183,21 +185,18 @@ def test_personal_finance_rag_drilldown_reports_and_audit_are_wired():
     assert audit["missing"] == 0
 
 
-def test_personal_finance_beyond_local_status_and_nas_index_are_wired():
+def test_personal_finance_beyond_local_status_is_preview_and_nas_index_is_removed():
     client = TestClient(app)
 
     status = client.get("/api/personal-finance/beyond-local/status").json()
-    assert status["status"] == "BEYOND_LOCAL_IMPLEMENTED_WITH_TRUE_EXTERNAL_TARGET_BLOCKERS"
-    assert "approved_nas_source_indexing_endpoint" in status["done"]
+    assert status["status"] == "PREVIEW_LOCAL_WITH_EXTERNAL_TARGET_BLOCKERS"
+    assert "approved_nas_source_indexing_endpoint" not in status["preview"]
     assert status["partial"] == []
     assert status["missing"] == []
     assert any(row["item"] == "live_bank_cdr_connection" for row in status["blocked"])
 
-    result = client.post(
+    response = client.post(
         "/api/personal-finance/sources/nas/index",
         json={"max_files": 1, "max_chunks_per_file": 1},
-    ).json()
-    assert result["mode"] == "postgres_pgvector_nas_source_index"
-    assert result["external_send"] is False
-    assert "\\\\nas2\\amtl-documents\\escalation-logs\\linux logs\\wazuz\\prefe" in result["excluded_prefixes"]
-    assert "\\\\nas1\\nas\\programs\\spiritual\\dr joe dispenza\\generous moment\\mani" in result["excluded_prefixes"]
+    )
+    assert response.status_code == 404
