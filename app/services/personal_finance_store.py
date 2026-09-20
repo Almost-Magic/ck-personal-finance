@@ -8,6 +8,9 @@ Postgres outage, not as a SQLite runtime.
 from __future__ import annotations
 
 import hashlib
+import csv
+import io
+import shutil
 import json
 import math
 import os
@@ -16,6 +19,9 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 try:
     import psycopg
@@ -39,6 +45,7 @@ APP_MODE = "postgres"
 POSTGRES_CONNECT_TIMEOUT_SECONDS = int(os.environ.get("PF_POSTGRES_CONNECT_TIMEOUT_SECONDS", "3"))
 VECTOR_DIMS = 1536
 USER_UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads" / "personal-finance" / "user-provided"
+USER_UPLOAD_QUARANTINE = USER_UPLOAD_ROOT / ".quarantine"
 MAX_USER_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
@@ -377,24 +384,49 @@ def _read_source_chunks(path: Path, max_chunks: int = 12) -> list[dict[str, str]
         return []
     if path.suffix.lower() == ".pdf":
         try:
-            stat = path.stat()
-            return [{
-                "title": f"{path.name} metadata",
-                "source_path": str(path),
-                "text": f"PDF source available for CK Personal Finance evidence indexing. File: {path.name}. Size: {stat.st_size} bytes. Path: {path}",
-            }]
-        except OSError:
-            return []
-    text = path.read_text(encoding="utf-8", errors="ignore")
+            reader = PdfReader(str(path))
+        except (PdfReadError, OSError, ValueError) as exc:
+            raise ValueError("PDF is malformed or unreadable.") from exc
+        if reader.is_encrypted:
+            raise ValueError("Encrypted PDFs are not accepted.")
+        chunks = []
+        for index, page in enumerate(reader.pages[:max_chunks], start=1):
+            text = (page.extract_text() or "").strip()
+            if text:
+                chunks.append({"title": f"{path.name} page {index}", "source_path": str(path), "text": text[:3500]})
+        if not chunks:
+            raise ValueError("PDF contains no extractable text.")
+        return chunks
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError) as exc:
+        raise ValueError("CSV must be valid UTF-8 text.") from exc
     chunks = []
     parts = [part.strip() for part in text.split("\n\n") if part.strip()]
     for i, part in enumerate(parts[:max_chunks], start=1):
-        chunks.append({
-            "title": f"{path.name} chunk {i}",
-            "source_path": str(path),
-            "text": part[:3500],
-        })
+        chunks.append({"title": f"{path.name} chunk {i}", "source_path": str(path), "text": part[:3500]})
     return chunks
+
+
+def _validate_upload(path: Path, suffix: str) -> None:
+    header = path.read_bytes()[:8]
+    if suffix == ".pdf":
+        if not header.startswith(b"%PDF-"):
+            raise ValueError("File extension and PDF content do not match.")
+        _read_source_chunks(path, max_chunks=24)
+        return
+    if b"\x00" in path.read_bytes()[:4096]:
+        raise ValueError("CSV appears to contain binary data.")
+    try:
+        text = path.read_text(encoding="utf-8")
+        rows = list(csv.reader(io.StringIO(text)))
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise ValueError("CSV is malformed or is not valid UTF-8.") from exc
+    if not rows or not rows[0] or not any(cell.strip() for cell in rows[0]):
+        raise ValueError("CSV requires a non-empty header row.")
+    width = len(rows[0])
+    if any(len(row) != width for row in rows[1:]):
+        raise ValueError("CSV rows do not match the header column count.")
 
 
 def _insert_evidence_chunks(conn: Any, profile_id: int, chunks: list[dict[str, str]], document_type: str) -> int:
@@ -706,28 +738,38 @@ def save_user_upload(file_obj: Any, filename: str, content_type: str | None = No
     suffix = Path(safe_name).suffix.lower()
     if suffix not in USER_UPLOAD_EXTENSIONS:
         raise ValueError("Only CSV and PDF uploads are accepted for CK Personal Finance local evidence.")
+    expected_types = {".csv": {"text/csv", "application/csv", "application/vnd.ms-excel"}, ".pdf": {"application/pdf"}}
+    if content_type and content_type.lower() not in expected_types[suffix]:
+        raise ValueError("File extension and declared content type do not match.")
     USER_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    USER_UPLOAD_QUARANTINE.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     digest = hashlib.sha256(f"{safe_name}:{stamp}".encode("utf-8")).hexdigest()[:10]
+    quarantine = USER_UPLOAD_QUARANTINE / f"{stamp}-{digest}-{safe_name}.part"
     destination = USER_UPLOAD_ROOT / f"{stamp}-{digest}-{safe_name}"
     size = 0
-    with destination.open("wb") as out:
-        while True:
-            chunk = file_obj.read(1024 * 1024)
-            if not chunk:
-                break
-            size += len(chunk)
-            if size > MAX_USER_UPLOAD_BYTES:
-                out.close()
-                destination.unlink(missing_ok=True)
-                raise ValueError("CSV/PDF upload is too large for the local evidence intake limit.")
-            out.write(chunk)
-    if size == 0:
+    try:
+        with quarantine.open("wb") as out:
+            while True:
+                chunk = file_obj.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_USER_UPLOAD_BYTES:
+                    raise ValueError("CSV/PDF upload is too large for the local evidence intake limit.")
+                out.write(chunk)
+        if size == 0:
+            raise ValueError("Uploaded file was empty.")
+        _validate_upload(quarantine, suffix)
+        quarantine.replace(destination)
+        result = index_user_upload(destination, filename, size)
+    except Exception:
+        quarantine.unlink(missing_ok=True)
         destination.unlink(missing_ok=True)
-        raise ValueError("Uploaded file was empty.")
-    result = index_user_upload(destination, filename, size)
+        raise
     result["content_type"] = content_type or "unknown"
     result["max_bytes"] = MAX_USER_UPLOAD_BYTES
+    result["sha256"] = hashlib.sha256(destination.read_bytes()).hexdigest()
     return result
 
 
