@@ -61,29 +61,29 @@ class AiCompleteRequest(BaseModel):
 
 
 SAFE_LOCAL_WORKFLOWS = [
-    ("dashboard", "Dashboard", "DONE", "public/index.html", "Calm overview, user controls, privacy boundary, and live proof panels"),
-    ("accounts", "Accounts", "DONE", "app/services/personal_finance_store.py", "Personal account groups persist with source state and drilldown rows"),
-    ("transactions", "Transactions", "DONE", "app/services/personal_finance_store.py", "Import rollback receipts, source confidence, and local drilldown are wired"),
-    ("income", "Income", "DONE", "app/services/personal_finance_store.py", "Household income appears in report/export and scenario payloads"),
-    ("expenses", "Expenses", "DONE", "app/services/personal_finance_store.py", "Bills/subscriptions are represented through reminders, scenarios, and report rows"),
-    ("cashflow", "Cashflow", "DONE", "app/services/personal_finance_store.py", "Local scenarios and review-pack export show cash movement without external writes"),
-    ("budget", "Budget", "DONE", "app/services/personal_finance_store.py", "Local review pack and field helpers cover budget variance and calm explanations"),
-    ("savings-goals", "Savings goals", "DONE", "app/services/personal_finance_store.py", "Savings goals persist and drill into named rows"),
-    ("debt-loans", "Debt and loans", "DONE", "app/services/personal_finance_store.py", "Debt plans persist with repayment scenario support"),
-    ("net-worth", "Net worth", "DONE", "app/services/personal_finance_store.py", "Account groups include assets/liabilities/super and report exports link to source rows"),
-    ("tax-evidence", "Tax and document evidence", "DONE", "app/services/personal_finance_store.py", "Approved source docs are indexed for local pgvector/RAG search with disclaimers"),
-    ("receipts-files", "Receipts and files", "DONE", "app/services/personal_finance_store.py", "Document evidence and local receipts persist; external send remains disabled"),
-    ("alerts-reminders", "Alerts and reminders", "DONE", "app/services/personal_finance_store.py", "Local reminder records exist with cadence, due date, and source refs"),
-    ("reports", "Reports", "DONE", "app/services/personal_finance_store.py", "Report/export receipts are local, source-linked, and marked not sent"),
-    ("scenario-planner", "Scenario planner", "DONE", "app/services/personal_finance_store.py", "Local what-if scenarios persist with inputs, outputs, and no-advice boundary"),
-    ("privacy-risk", "Risk and privacy boundaries", "DONE", "app/routes/personal_finance.py", "No advice, no bank API, OpenRouter is approval-gated, no external write"),
-    ("import-reconcile", "Import and reconcile", "DONE", "app/services/personal_finance_store.py", "Preview-only rollback receipts and source confidence are visible"),
-    ("local-notes", "Local notes and decisions", "DONE", "app/services/personal_finance_store.py", "Decision receipts persist without external write"),
-    ("cross-app", "Cross-app handoffs", "DONE", "app/services/personal_finance_store.py", "Draft-only handoff records exist for AMTL apps; no receiver mutation"),
-    ("admin-settings", "Admin and settings", "DONE", "app/routes/personal_finance.py", "Admin proof is behind Admin/Proof and includes DB/RAG/route truth"),
-    ("openrouter-live-route", "OpenRouter live route", "DONE", "app/services/openrouter_router.py", "OpenRouter is the only AI provider route; live execution is key/execute/paid-approval gated"),
-    ("external-action-gates", "External action gates", "DONE", "app/routes/personal_finance.py", "Bank/source/write/deploy actions are explicit approval targets with receipts, not silent UI buttons"),
-    ("user-csv-pdf-upload", "User CSV/PDF upload", "DONE", "app/routes/personal_finance.py", "Users can provide local CSV or PDF evidence; files are stored locally, indexed, and receipt-backed with external_send=false"),
+    ("dashboard", "Dashboard", "PREVIEW", "public/index.html", "Calm overview, user controls, privacy boundary, and live proof panels"),
+    ("accounts", "Accounts", "PREVIEW", "app/services/personal_finance_store.py", "Personal account groups persist with source state and drilldown rows"),
+    ("transactions", "Transactions", "PREVIEW", "app/services/personal_finance_store.py", "Import rollback receipts, source confidence, and local drilldown are wired"),
+    ("income", "Income", "PREVIEW", "app/services/personal_finance_store.py", "Household income appears in report/export and scenario payloads"),
+    ("expenses", "Expenses", "PREVIEW", "app/services/personal_finance_store.py", "Bills/subscriptions are represented through reminders, scenarios, and report rows"),
+    ("cashflow", "Cashflow", "PREVIEW", "app/services/personal_finance_store.py", "Local scenarios and review-pack export show cash movement without external writes"),
+    ("budget", "Budget", "PREVIEW", "app/services/personal_finance_store.py", "Local review pack and field helpers cover budget variance and calm explanations"),
+    ("savings-goals", "Savings goals", "PREVIEW", "app/services/personal_finance_store.py", "Savings goals persist and drill into named rows"),
+    ("debt-loans", "Debt and loans", "PREVIEW", "app/services/personal_finance_store.py", "Debt plans persist with repayment scenario support"),
+    ("net-worth", "Net worth", "PREVIEW", "app/services/personal_finance_store.py", "Account groups include assets/liabilities/super and report exports link to source rows"),
+    ("tax-evidence", "Tax and document evidence", "PREVIEW", "app/services/personal_finance_store.py", "Approved source docs are indexed for local pgvector/RAG search with disclaimers"),
+    ("receipts-files", "Receipts and files", "PREVIEW", "app/services/personal_finance_store.py", "Document evidence and local receipts persist; external send remains disabled"),
+    ("alerts-reminders", "Alerts and reminders", "PREVIEW", "app/services/personal_finance_store.py", "Local reminder records exist with cadence, due date, and source refs"),
+    ("reports", "Reports", "PREVIEW", "app/services/personal_finance_store.py", "Report/export receipts are local, source-linked, and marked not sent"),
+    ("scenario-planner", "Scenario planner", "PREVIEW", "app/services/personal_finance_store.py", "Local what-if scenarios persist with inputs, outputs, and no-advice boundary"),
+    ("privacy-risk", "Risk and privacy boundaries", "PREVIEW", "app/routes/personal_finance.py", "No advice, no bank API, OpenRouter is approval-gated, no external write"),
+    ("import-reconcile", "Import and reconcile", "PREVIEW", "app/services/personal_finance_store.py", "Preview-only rollback receipts and source confidence are visible"),
+    ("local-notes", "Local notes and decisions", "PREVIEW", "app/services/personal_finance_store.py", "Decision receipts persist without external write"),
+    ("cross-app", "Cross-app handoffs", "PREVIEW", "app/services/personal_finance_store.py", "Draft-only handoff records exist for AMTL apps; no receiver mutation"),
+    ("admin-settings", "Admin and settings", "PREVIEW", "app/routes/personal_finance.py", "Admin proof is behind Admin/Proof and includes DB/RAG/route truth"),
+    ("openrouter-live-route", "OpenRouter live route", "PREVIEW", "app/services/openrouter_router.py", "OpenRouter is the only AI provider route; live execution is key/execute/paid-approval gated"),
+    ("external-action-gates", "External action gates", "PREVIEW", "app/routes/personal_finance.py", "Bank/source/write/deploy actions are explicit approval targets with receipts, not silent UI buttons"),
+    ("user-csv-pdf-upload", "User CSV/PDF upload", "PREVIEW", "app/routes/personal_finance.py", "Users can provide local CSV or PDF evidence; files are stored locally, indexed, and receipt-backed with external_send=false"),
 ]
 
 
@@ -147,12 +147,12 @@ async def cockpit():
         }
         dependency_error = str(exc)
     matrix = _matrix()
-    done = sum(1 for row in matrix if row["status"] == "DONE")
+    preview = sum(1 for row in matrix if row["status"] == "PREVIEW")
     partial = sum(1 for row in matrix if row["status"] == "PARTIAL")
     missing = sum(1 for row in matrix if row["status"] == "NOT IMPLEMENTED")
     local_complete = using_postgres() and persistence["table_counts"]["finance_document_evidence"] > 1
     reason = (
-        "All safe local/internal rows are implemented and proved. External bank/send actions remain disabled; AI is routed through approval-gated OpenRouter only."
+        "Local/internal rows are previews until the matching acceptance evidence passes for this commit. External bank/send actions remain disabled; AI is routed through approval-gated OpenRouter only."
         if local_complete
         else "Postgres/pgvector dependency is not active; CK Personal Finance has no SQLite runtime fallback."
     )
@@ -160,14 +160,14 @@ async def cockpit():
         "product": "CK Personal Finance",
         "mode": "local_internal_private",
         "source_truth": {
-            "active_tree": "C:/AMTL/repos/elaine-complete-record-push/Source and Brand/Finance App/The Ledger",
+            "repository": "Almost-Magic/Elaine",
             "recovered_app_name": "The Ledger",
             "recovered_positioning": "Recovered finance app adapted to CK Personal Finance local/internal scope",
-            "ck_personal_finance_fit": "local_internal_runtime_complete" if local_complete else "fallback_partial",
+            "ck_personal_finance_fit": "local_internal_preview" if local_complete else "dependency_blocked",
         },
         "claim": {
-            "done_local_internal": local_complete,
-            "mani_100_allowed": local_complete,
+            "preview_local_internal": local_complete,
+            "acceptance_evidence_complete": False,
             "reason": reason,
         },
         "privacy": {
@@ -192,7 +192,7 @@ async def cockpit():
             "truth": persistence["pgvector_contract"]["rag_status"],
         },
         "persistence": persistence,
-        "counts": {"done": done, "partial": partial, "not_implemented": missing, "total": len(matrix)},
+        "counts": {"preview": preview, "partial": partial, "not_implemented": missing, "total": len(matrix)},
         "matrix": matrix,
         "buttons": BUTTONS,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -230,8 +230,8 @@ async def beyond_local_status():
     persistence = get_persistence_snapshot()
     return {
         "product": "CK Personal Finance",
-        "status": "BEYOND_LOCAL_IMPLEMENTED_WITH_TRUE_EXTERNAL_TARGET_BLOCKERS",
-        "done": [
+        "status": "PREVIEW_LOCAL_WITH_EXTERNAL_TARGET_BLOCKERS",
+        "preview": [
             "postgres_pgvector_runtime",
             "openrouter_reasoning_cost_router",
             "report_export_receipts",

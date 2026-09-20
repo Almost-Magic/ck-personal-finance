@@ -1094,7 +1094,7 @@
             readiness: {
                 intro: "Technical evidence stays behind Admin.",
                 rows: [
-                    ["Postgres", "Required", "SQLite is not a CK Personal Finance DONE path."],
+                    ["Postgres", "Required", "SQLite is not a supported CK Personal Finance runtime path."],
                     ["pgvector", "Active", "finance_document_evidence.embedding vector search."],
                     ["Workshop and Beast", "Registered", "Port and friendly route status checked."]
                 ],
@@ -1134,8 +1134,8 @@
             "delivery-matrix": {
                 intro: "The matrix is evidence for operators, not normal-user content.",
                 rows: [
-                    ["Private workspace", "Done", "Safe rows implemented and checked."],
-                    ["Beyond private safe paths", "Done", "Approved sources and provider-readiness checks recorded."],
+                    ["Private workspace", "Preview", "Local rows still require commit-specific acceptance evidence."],
+                    ["Beyond private safe paths", "Not connected", "External destinations and live workflows are not verified."],
                     ["True blockers", "External", "Need targets, credentials, contracts, or approval."]
                 ],
                 actions: ["runAudit", "showProof"],
@@ -1256,7 +1256,7 @@
             ]);
             state.cockpit = cockpit;
             state.actions = actions;
-            document.getElementById("weatherPart").textContent = cockpit.claim.done_local_internal
+            document.getElementById("weatherPart").textContent = cockpit.claim.preview_local_internal
                 ? "Weather/status: private workspace ready"
                 : "Weather/status: readiness check needed";
             const wisdom = nextPrompt(cockpit);
@@ -1312,7 +1312,7 @@
             document.getElementById("breadcrumb").textContent = section.label;
             document.getElementById("screenTitle").textContent = tab.title;
             document.getElementById("screenCopy").textContent = tab.copy;
-            document.getElementById("modePill").textContent = state.cockpit?.claim.done_local_internal ? "Private ready" : "Evidence check running";
+            document.getElementById("modePill").textContent = state.cockpit?.claim.preview_local_internal ? "Private preview" : "Evidence check running";
             document.getElementById("adminProofCard").classList.toggle("hidden", state.section !== "admin");
         }
 
@@ -1447,7 +1447,7 @@
         function renderAdmin() {
             const c = state.cockpit;
             const rows = [
-                ["Claim", c.claim.done_local_internal ? "Private workspace ready" : c.claim.reason],
+                ["Claim", c.claim.preview_local_internal ? "Private workspace preview" : c.claim.reason],
                 ["Database", `${c.database.store_kind}; ${c.database.postgres_truth}`],
                 ["pgvector", `${c.database.pgvector_truth.version}; ${c.database.pgvector_truth.embedding_column}`],
                 ["Sources & Search", `${c.rag.truth}; chunks ${c.persistence.table_counts.finance_document_evidence}`],
