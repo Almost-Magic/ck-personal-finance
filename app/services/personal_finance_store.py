@@ -34,13 +34,15 @@ except Exception:  # pragma: no cover - exercised by fallback environments
 APP_DSN = os.environ.get("PF_DATABASE_URL") or os.environ.get("PERSONAL_FINANCE_DATABASE_URL")
 APP_CONNINFO: dict[str, Any] | None = None
 if not APP_DSN:
-    APP_CONNINFO = {
-        "user": os.environ.get("PF_POSTGRES_USER", "amtl"),
-        "password": os.environ.get("PF_POSTGRES_PASS", "amtl"),
-        "host": os.environ.get("PF_POSTGRES_HOST", "127.0.0.1"),
-        "port": os.environ.get("PF_POSTGRES_PORT", "55433"),
-        "dbname": os.environ.get("PF_POSTGRES_DB", "ck_personal_finance"),
+    required = {
+        "user": os.environ.get("PF_POSTGRES_USER"),
+        "password": os.environ.get("PF_POSTGRES_PASS"),
+        "host": os.environ.get("PF_POSTGRES_HOST"),
+        "port": os.environ.get("PF_POSTGRES_PORT"),
+        "dbname": os.environ.get("PF_POSTGRES_DB"),
     }
+    if all(required.values()):
+        APP_CONNINFO = required
 APP_MODE = "postgres"
 POSTGRES_CONNECT_TIMEOUT_SECONDS = int(os.environ.get("PF_POSTGRES_CONNECT_TIMEOUT_SECONDS", "3"))
 VECTOR_DIMS = 1536
