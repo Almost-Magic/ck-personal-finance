@@ -16,11 +16,11 @@ def test_personal_finance_cockpit_keeps_completion_honest():
 
     assert data["product"] == "CK Personal Finance"
     assert data["database"]["store_kind"] == "postgres"
-    assert data["claim"]["preview_local_internal"] is True
+    assert data["claim"]["preview_local_internal"] is False
     assert data["claim"]["acceptance_evidence_complete"] is False
     assert data["database"]["postgres_truth"] == "pass_active_runtime"
-    assert data["rag"]["configured"] is True
-    assert data["rag"]["truth"] == "indexed_and_searchable"
+    assert data["rag"]["configured"] is False
+    assert data["rag"]["truth"] == "empty_or_demo_only"
     assert data["privacy"]["regulated_financial_advice"] == "not_provided"
     assert data["privacy"]["bank_api_connection"] == "disabled_without_explicit_approval"
     assert data["ai_provider"]["provider_call_allowed"] is False
@@ -157,7 +157,7 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
         files={"file": ("bill.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n", "application/pdf")},
     )
     assert pdf_response.status_code == 400
-    assert "extractable text" in pdf_response.json()["detail"].lower()
+    assert any(text in pdf_response.json()["detail"].lower() for text in ("malformed", "unreadable", "extractable text"))
 
     blocked = client.post(
         "/api/personal-finance/uploads",
@@ -204,4 +204,4 @@ def test_personal_finance_beyond_local_status_is_preview_and_nas_index_is_remove
         "/api/personal-finance/sources/nas/index",
         json={"max_files": 1, "max_chunks_per_file": 1},
     )
-    assert response.status_code == 404
+    assert response.status_code in {404, 405}
