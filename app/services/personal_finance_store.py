@@ -383,7 +383,9 @@ def _validate_upload(path: Path, suffix: str) -> None:
     if suffix == ".pdf":
         if not header.startswith(b"%PDF-"):
             raise ValueError("File extension and PDF content do not match.")
-        _read_source_chunks(path, max_chunks=24)
+        chunks = _read_source_chunks(path, max_chunks=24)
+        if not chunks:
+            raise ValueError("PDF contains no extractable text.")
         return
     if b"\x00" in path.read_bytes()[:4096]:
         raise ValueError("CSV appears to contain binary data.")
