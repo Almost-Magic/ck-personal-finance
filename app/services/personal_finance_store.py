@@ -52,7 +52,7 @@ MAX_USER_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
 POSTGRES_SCHEMA_SQL = """
-CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 CREATE TABLE IF NOT EXISTS personal_profiles (
     id BIGSERIAL PRIMARY KEY,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS finance_document_evidence (
     document_type TEXT NOT NULL,
     source_path TEXT,
     evidence_text TEXT NOT NULL,
-    embedding vector(1536),
+    embedding public.vector(1536),
     freshness_state TEXT NOT NULL DEFAULT 'local_demo',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
