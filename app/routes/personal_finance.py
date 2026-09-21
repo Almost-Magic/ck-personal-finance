@@ -71,7 +71,7 @@ SAFE_LOCAL_WORKFLOWS = [
     ("savings-goals", "Savings goals", "PREVIEW", "app/services/personal_finance_store.py", "Savings goals persist and drill into named rows"),
     ("debt-loans", "Debt and loans", "PREVIEW", "app/services/personal_finance_store.py", "Debt plans persist with repayment scenario support"),
     ("net-worth", "Net worth", "PREVIEW", "app/services/personal_finance_store.py", "Account groups include assets/liabilities/super and report exports link to source rows"),
-    ("tax-evidence", "Tax and document evidence", "PREVIEW", "app/services/personal_finance_store.py", "Approved source docs are indexed for local pgvector/RAG search with disclaimers"),
+    ("tax-evidence", "Tax and document evidence", "PREVIEW", "app/services/personal_finance_store.py", "Configured source docs are indexed for local pgvector/RAG search with disclaimers"),
     ("receipts-files", "Receipts and files", "PREVIEW", "app/services/personal_finance_store.py", "Document evidence and local receipts persist; external send remains disabled"),
     ("alerts-reminders", "Alerts and reminders", "PREVIEW", "app/services/personal_finance_store.py", "Local reminder records exist with cadence, due date, and source refs"),
     ("reports", "Reports", "PREVIEW", "app/services/personal_finance_store.py", "Report/export receipts are local, source-linked, and marked not sent"),

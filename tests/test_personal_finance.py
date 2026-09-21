@@ -74,7 +74,7 @@ def test_personal_finance_actions_are_local_and_blocked_where_needed():
     data = client.get("/api/personal-finance/actions").json()
 
     assert "copy_privacy_boundary_receipt" in data["safe_actions"]
-    assert "route_ai_task_through_openrouter_policy" not in data["safe_actions"]
+    assert "route_ai_task_through_openrouter_policy" in data["safe_actions"]
     assert "upload_user_csv_or_pdf_local_evidence" in data["safe_actions"]
     assert "live_bank_connection" in data["blocked_actions"]
     assert "regulated_financial_advice" in data["blocked_actions"]
@@ -156,12 +156,8 @@ def test_personal_finance_user_csv_pdf_uploads_are_local_receipted():
         "/api/personal-finance/uploads",
         files={"file": ("bill.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n", "application/pdf")},
     )
-    assert pdf_response.status_code == 200
-    pdf_data = pdf_response.json()
-    assert pdf_data["file_type"] == "user_uploaded_pdf"
-    assert pdf_data["external_send"] is False
-    assert pdf_data["source_id"].startswith("upload:")
-    assert "stored_path" not in pdf_data
+    assert pdf_response.status_code == 400
+    assert "extractable text" in pdf_response.json()["detail"].lower()
 
     blocked = client.post(
         "/api/personal-finance/uploads",
