@@ -172,7 +172,12 @@ def test_personal_finance_rag_drilldown_reports_and_audit_are_wired():
 
     rag = client.get("/api/personal-finance/rag/search", params={"q": "tax evidence", "limit": 2}).json()
     assert rag["mode"] == "postgres_pgvector"
-    assert len(rag["results"]) >= 1
+    assert isinstance(rag["results"], list)
+    # No deployment-configured source files means an honest empty result,
+    # never seeded or fabricated RAG evidence.
+    if not rag["results"]:
+        persistence = client.get("/api/personal-finance/persistence").json()
+        assert persistence["pgvector_contract"]["rag_status"] == "empty_or_demo_only"
 
     drilldown = client.get("/api/personal-finance/drilldown/budget").json()
     assert drilldown["rows"]["reminders"] >= 1
