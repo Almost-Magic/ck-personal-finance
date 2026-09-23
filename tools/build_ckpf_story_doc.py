@@ -403,6 +403,7 @@ def main():
     props.subject = "Screens, panels, buttons, fields, runtime and evidence stories"
     props.author = "AMTL Codex"
     props.comments = "Generated locally for Mani; no external send."
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUT)
     print(OUT)
 
