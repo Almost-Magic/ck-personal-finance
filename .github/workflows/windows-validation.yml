@@ -1,0 +1,69 @@
+name: CK PF Windows validation
+
+# Starts only when a repo writer pushes a branch named exactly
+# "windows-validation-run". One push = one run. No pull_request, no schedule,
+# no other trigger. Each run draws from the repo owner's included compute
+# usage (Windows runner per-minute rate) and is hard-capped at 30 minutes.
+on:
+  push:
+    branches:
+      - windows-validation-run
+
+permissions:
+  contents: write   # lets the auto GITHUB_TOKEN push the evidence branch back
+
+concurrency:
+  group: windows-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (workflow + validation kit, from the pushed branch)
+        uses: actions/checkout@v4
+
+      - name: Checkout candidate zip (branch candidate-rb6g)
+        uses: actions/checkout@v4
+        with:
+          ref: candidate-rb6g
+          path: candidate
+
+      - name: Run validation kit (Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\validation\windows-kit\validate.ps1" -ZipPath ".\candidate\ck-personal-finance-windows-v1.0.zip" -NoPauses
+          exit $LASTEXITCODE
+
+      - name: Push evidence branch
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "validation/windows-kit/ck-validation-results-*")) {
+            Write-Error "no results folder produced; the validation kit did not complete"
+            exit 1
+          }
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          $dest = "evidence/$env:GITHUB_RUN_ID"
+          New-Item -ItemType Directory -Force $dest | Out-Null
+          Copy-Item -Recurse validation/windows-kit/ck-validation-results-* $dest/
+          git add $dest
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Error "results folder staged no files; refusing to push empty evidence"
+            exit 1
+          }
+          git commit -m "Windows validation evidence run $env:GITHUB_RUN_ID"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin "HEAD:refs/heads/windows-validation-evidence-$env:GITHUB_RUN_ID"
+          exit $LASTEXITCODE
+
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ckpf-windows-validation-evidence
+          path: validation/windows-kit/ck-validation-results-*/
+          retention-days: 30
