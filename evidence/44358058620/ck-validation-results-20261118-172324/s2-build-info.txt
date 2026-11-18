@@ -1,0 +1,8 @@
+﻿CK Personal Finance - Windows giveaway bundle
+source commit: fbd255931e9fe3052f0f6ea6c4a6aab022b7b5aa
+python: 3.12.10 embeddable amd64
+wheels: pinned to packaging/windows/requirements-windows-pinned.txt
+manifest: BUNDLE-MANIFEST.txt holds the sha256 of every shipped file except
+itself. Verify with Verify-Bundle.bat.
+v1.1 (18 Nov 2026): python312._pth adds the bundle root (..\..) so app/ is importable; fixes S3 ModuleNotFoundError on clean Windows.
+

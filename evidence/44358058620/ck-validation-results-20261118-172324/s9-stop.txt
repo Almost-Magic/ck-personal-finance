@@ -1,0 +1,2 @@
+Stopped. Verified: nothing is listening on port 5002 any more.
+Press any key to continue . . . 

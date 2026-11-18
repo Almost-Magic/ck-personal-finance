@@ -1,0 +1,4 @@
+﻿zip: .\candidate\ck-personal-finance-windows-v1.3.zip
+bytes: 35264778
+sha256: 49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d
+expected: 49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d
