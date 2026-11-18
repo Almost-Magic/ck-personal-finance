@@ -68,12 +68,18 @@ function Port-Free() {
     $c.Connect("127.0.0.1", 5002); $c.Close(); return $false
   } catch { return $true }
 }
-function Run-Bat([string]$bat, [string]$stdinLines, [string]$outName, [int]$timeoutSec) {
+function Run-Bat([string]$bat, [string]$stdinText, [string]$outName, [int]$timeoutSec) {
   # Written to a temp .cmd file: no cmd /c quote-stripping and no PowerShell
   # native-argument marshalling of embedded quotes (PS 5.1 and 7 differ).
+  # Stdin comes from a temp file written WITHOUT carriage returns: cmd's
+  # set /p keeps the trailing CR an echo pipe adds, so piped "YES" never
+  # equals "YES" inside the bat (S11a false failure, run 44357115815). A
+  # console typist sends no CR, so LF-only input matches real use.
   $outFile = Join-Path $ResultsDir $outName
+  $inFile = Join-Path $env:TEMP ("ckpf-in-" + [guid]::NewGuid().ToString("N") + ".txt")
   $cmdFile = Join-Path $env:TEMP ("ckpf-run-" + [guid]::NewGuid().ToString("N") + ".cmd")
-  $lines = @("@echo off", "cd /d `"$BundleDir`"", "($stdinLines) | `"$bat`" > `"$outFile`" 2>&1")
+  [System.IO.File]::WriteAllText($inFile, $stdinText)
+  $lines = @("@echo off", "cd /d `"$BundleDir`"", "`"$bat`" < `"$inFile`" > `"$outFile`" 2>&1")
   [System.IO.File]::WriteAllLines($cmdFile, $lines)
   try {
     $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "`"$cmdFile`"" -PassThru
@@ -85,6 +91,7 @@ function Run-Bat([string]$bat, [string]$stdinLines, [string]$outName, [int]$time
     return @{ ok=$true; text=$txt }
   } finally {
     Remove-Item $cmdFile -Force -ErrorAction SilentlyContinue
+    Remove-Item $inFile -Force -ErrorAction SilentlyContinue
   }
 }
 function Start-App() {
@@ -304,7 +311,7 @@ if (-not $script:StopRun) {
 
 # S11 remove data + fresh first-run
 if (-not $script:StopRun) {
-  $r = Run-Bat "$BundleDir\Remove-Data.bat" "(echo YES&echo.)" "s11-remove-data.txt" 120
+  $r = Run-Bat "$BundleDir\Remove-Data.bat" "YES`n" "s11-remove-data.txt" 120
   $gone = -not (Test-Path "$BundleDir\data")
   if ($gone -and ($r.text -match "Data folder removed")) {
     Record "S11a" "Remove-Data deletes the data folder" "PASS" "data folder removed"
