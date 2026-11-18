@@ -33,7 +33,7 @@ jobs:
       - name: Run validation kit (Windows PowerShell 5.1)
         shell: pwsh
         run: |
-          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\validation\windows-kit\validate.ps1" -ZipPath ".\candidate\ck-personal-finance-windows-v1.0.zip" -NoPauses
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\validation\windows-kit\validate.ps1" -ZipPath ".\candidate\ck-personal-finance-windows-v1.3.zip" -NoPauses
           exit $LASTEXITCODE
 
       - name: Push evidence branch
