@@ -411,7 +411,7 @@ def build_docx():
         ("Routes", ROUTES),
         ("Visual proof", str(QA_DEEP / "five-loop-visual-product-audit-final.json")),
         ("Delivery matrix", str(QA_LOCAL / "product-bible-delivery-matrix-270627.md")),
-        ("Status file", r"C:\Users\Mani\AMTL-docs\AMTL-AGENT-CONTROL-CENTER\C1-CK-PERSONAL-FINANCE-LOCAL-INTERNAL-270626.md"),
+        ("Status file", str(QA_LOCAL / "C1-CK-PERSONAL-FINANCE-LOCAL-INTERNAL-270626.md")),
     ])
 
     footer = section.footer.paragraphs[0]
