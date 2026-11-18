@@ -1,0 +1,2 @@
+This deletes ALL your CK Personal Finance records in the data folder. Type YES to confirm: Cancelled - nothing was deleted.
+Press any key to continue . . . 

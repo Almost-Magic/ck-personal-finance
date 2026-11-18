@@ -1,0 +1,17 @@
+[17:18:26] CK PF native Windows validation - results: D:\a\ck-personal-finance\ck-personal-finance\validation\windows-kit\ck-validation-results-20261118-171826
+[17:18:26] PASS S0: Environment recorded
+[17:18:26] PASS S1: Candidate zip sha256 matches pinned rebuilt candidate (RB6g)
+[17:18:45] PASS S2: Bundle extracted and verified (1190 files, commit match)
+[17:18:50] PASS S3: App launches and serves on 127.0.0.1:5002
+[17:19:25] PASS S4: Exactly one ck-ledger process remains
+[17:19:25] PASS S5: Second launch refused; first instance keeps serving
+[17:19:25] PASS S6: Bundled tesseract 5.5.4 runs natively; payload complete
+[17:19:27] PASS S7a: PNG bill OCR gives UNVERIFIED vendor/amount/due_date with source lines
+[17:19:28] PASS S7b: Confirm creates a bill (source=ocr)
+[17:19:28] PASS S7c: 4-frame TIFF: 3 frames read, skip notice shown
+[17:19:29] PASS S7d: 2-page PDF: both pages read
+[17:19:29] PASS S7e: No leftover working rasters in uploads\ocr
+[17:19:31] PASS S8: Ask without Ollama: clear message, no crash
+[17:19:38] PASS S9: Stop-Ledger stops the server; port 5002 free
+[17:19:41] PASS S10: Confirmed bill persists across restart
+[17:19:48] FAIL S11a: Remove-Data deletes the data folder

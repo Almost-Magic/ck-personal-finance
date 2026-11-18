@@ -1,0 +1,2 @@
+﻿candidate zip sha256: 49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d
+tesseract.exe sha256: e4d0af875c25a9f3f45a5ae0fa36cfcdb2be96385bf5449f60ff56080a1c26e3

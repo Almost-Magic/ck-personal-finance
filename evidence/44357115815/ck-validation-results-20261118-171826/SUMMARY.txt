@@ -1,0 +1,39 @@
+﻿CK PF native Windows validation summary (20261118-171826)
+OS: Microsoft Windows Server 2025 Datacenter 10.0.26100
+PASS: 15  FAIL: 1
+
+PASS S0: Environment recorded
+  observed: OS: Microsoft Windows Server 2025 Datacenter 10.0.26100 64-bit; PS: 5.1.26100.33648; Computer: runnervmm7ud1; Time: 2026-11-18T17:18:26.4838471+00:00
+PASS S1: Candidate zip sha256 matches pinned rebuilt candidate (RB6g)
+  observed: 49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d (35264778 bytes)
+PASS S2: Bundle extracted and verified (1190 files, commit match)
+  observed: BUNDLE VERIFIED
+PASS S3: App launches and serves on 127.0.0.1:5002
+  observed: healthy after 4.7s
+PASS S4: Exactly one ck-ledger process remains
+  observed: ck-ledger pid=1628
+PASS S5: Second launch refused; first instance keeps serving
+  observed: refusal printed, first instance healthy
+PASS S6: Bundled tesseract 5.5.4 runs natively; payload complete
+  observed: version ok; bin=7, tessdata ok, licenses=11+tree
+PASS S7a: PNG bill OCR gives UNVERIFIED vendor/amount/due_date with source lines
+  observed: fields: vendor,amount,due_date; engine: local_tesseract
+PASS S7b: Confirm creates a bill (source=ocr)
+  observed: bill id 1, event ocr_confirmed
+PASS S7c: 4-frame TIFF: 3 frames read, skip notice shown
+  observed: Only the first 3 of 4 image frames were read; later frames were skipped.
+PASS S7d: 2-page PDF: both pages read
+  observed: pages_processed=2, fields: vendor,amount,due_date
+PASS S7e: No leftover working rasters in uploads\ocr
+  observed: 0 leftover files
+PASS S8: Ask without Ollama: clear message, no crash
+  observed: HTTP 503: {"detail":"The local model llama3.2:3b is not installed on this machine yet."}
+PASS S9: Stop-Ledger stops the server; port 5002 free
+  observed: stopped, port free
+PASS S10: Confirmed bill persists across restart
+  observed: Synthetic Energy (source=ocr) present after restart
+FAIL S11a: Remove-Data deletes the data folder
+  observed: This deletes ALL your CK Personal Finance records in the data folder. Type YES to confirm: Cancelled - nothing was deleted.
+Press any key to continue . . . 
+; folder gone: False
+

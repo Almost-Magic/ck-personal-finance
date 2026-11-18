@@ -1,0 +1,98 @@
+﻿[
+    {
+        "step":  "S0",
+        "name":  "Environment recorded",
+        "status":  "PASS",
+        "observed":  "OS: Microsoft Windows Server 2025 Datacenter 10.0.26100 64-bit; PS: 5.1.26100.33648; Computer: runnervmm7ud1; Time: 2026-11-18T17:18:26.4838471+00:00"
+    },
+    {
+        "step":  "S1",
+        "name":  "Candidate zip sha256 matches pinned rebuilt candidate (RB6g)",
+        "status":  "PASS",
+        "observed":  "49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d (35264778 bytes)"
+    },
+    {
+        "step":  "S2",
+        "name":  "Bundle extracted and verified (1190 files, commit match)",
+        "status":  "PASS",
+        "observed":  "BUNDLE VERIFIED"
+    },
+    {
+        "step":  "S3",
+        "name":  "App launches and serves on 127.0.0.1:5002",
+        "status":  "PASS",
+        "observed":  "healthy after 4.7s"
+    },
+    {
+        "step":  "S4",
+        "name":  "Exactly one ck-ledger process remains",
+        "status":  "PASS",
+        "observed":  "ck-ledger pid=1628"
+    },
+    {
+        "step":  "S5",
+        "name":  "Second launch refused; first instance keeps serving",
+        "status":  "PASS",
+        "observed":  "refusal printed, first instance healthy"
+    },
+    {
+        "step":  "S6",
+        "name":  "Bundled tesseract 5.5.4 runs natively; payload complete",
+        "status":  "PASS",
+        "observed":  "version ok; bin=7, tessdata ok, licenses=11+tree"
+    },
+    {
+        "step":  "S7a",
+        "name":  "PNG bill OCR gives UNVERIFIED vendor/amount/due_date with source lines",
+        "status":  "PASS",
+        "observed":  "fields: vendor,amount,due_date; engine: local_tesseract"
+    },
+    {
+        "step":  "S7b",
+        "name":  "Confirm creates a bill (source=ocr)",
+        "status":  "PASS",
+        "observed":  "bill id 1, event ocr_confirmed"
+    },
+    {
+        "step":  "S7c",
+        "name":  "4-frame TIFF: 3 frames read, skip notice shown",
+        "status":  "PASS",
+        "observed":  "Only the first 3 of 4 image frames were read; later frames were skipped."
+    },
+    {
+        "step":  "S7d",
+        "name":  "2-page PDF: both pages read",
+        "status":  "PASS",
+        "observed":  "pages_processed=2, fields: vendor,amount,due_date"
+    },
+    {
+        "step":  "S7e",
+        "name":  "No leftover working rasters in uploads\\ocr",
+        "status":  "PASS",
+        "observed":  "0 leftover files"
+    },
+    {
+        "step":  "S8",
+        "name":  "Ask without Ollama: clear message, no crash",
+        "status":  "PASS",
+        "observed":  "HTTP 503: {\"detail\":\"The local model llama3.2:3b is not installed on this machine yet.\"}"
+    },
+    {
+        "step":  "S9",
+        "name":  "Stop-Ledger stops the server; port 5002 free",
+        "status":  "PASS",
+        "observed":  "stopped, port free"
+    },
+    {
+        "step":  "S10",
+        "name":  "Confirmed bill persists across restart",
+        "status":  "PASS",
+        "observed":  "Synthetic Energy (source=ocr) present after restart"
+    },
+    {
+        "step":  "S11a",
+        "name":  "Remove-Data deletes the data folder",
+        "status":  "FAIL",
+        "observed":  "This deletes ALL your CK Personal Finance records in the data folder. Type YES to confirm: Cancelled - nothing was deleted.\r\nPress any key to continue . . . \r\n; folder gone: False"
+    }
+]

@@ -1,0 +1,11 @@
+﻿tesseract 5.5.4
+ leptonica-1.87.0
+  libpng 1.6.59 : zlib 1.3.2
+ Found AVX512BW
+ Found AVX512F
+ Found AVX512VNNI
+ Found AVX2
+ Found AVX
+ Found FMA
+ Found SSE4.1
+

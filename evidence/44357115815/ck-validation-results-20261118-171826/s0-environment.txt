@@ -1,0 +1,1 @@
+﻿OS: Microsoft Windows Server 2025 Datacenter 10.0.26100 64-bit; PS: 5.1.26100.33648; Computer: runnervmm7ud1; Time: 2026-11-18T17:18:26.4838471+00:00
