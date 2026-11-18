@@ -14,7 +14,7 @@ $ResultsDir = Join-Path $KitDir "ck-validation-results-$Stamp"
 New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 $RunLog = Join-Path $ResultsDir "run-log.txt"
 
-$ExpectedZipSha  = "7504912613a126f479a6e78d9aadeda86a514612580ca63c3da5e96fc451a4e8"
+$ExpectedZipSha  = "49e14af0a57c7b48ad6771d462f38755896b1a9b8cc5b632b1ff10966c27bf3d"
 $ExpectedCommit  = "fbd255931e9fe3052f0f6ea6c4a6aab022b7b5aa"
 $ExpectedFiles   = 1190
 $BaseUrl         = "http://127.0.0.1:5002"
